@@ -9,10 +9,11 @@ import { PageHeader } from "@/components/page-header";
 import { ErrorBanner } from "@/components/error-banner";
 import { DeleteForm } from "@/components/delete-form";
 import { AttachmentUploader } from "@/components/attachment-uploader";
+import { MaintenanceManager } from "@/components/maintenance-manager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Asset, Attachment } from "@/lib/types";
+import type { Asset, Attachment, MaintenanceSchedule } from "@/lib/types";
 
 type AssetJoined = Asset & {
   homes: { name: string } | null;
@@ -30,23 +31,30 @@ export default async function AssetDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: asset }, { data: attachments }] = await Promise.all([
-    supabase
-      .from("assets")
-      .select("*, homes(name), rooms(name)")
-      .eq("id", id)
-      .maybeSingle(),
-    supabase
-      .from("attachments")
-      .select("*")
-      .eq("entity_type", "assets")
-      .eq("entity_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: asset }, { data: attachments }, { data: schedules }] =
+    await Promise.all([
+      supabase
+        .from("assets")
+        .select("*, homes(name), rooms(name)")
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("attachments")
+        .select("*")
+        .eq("entity_type", "assets")
+        .eq("entity_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("maintenance_schedules")
+        .select("*")
+        .eq("asset_id", id)
+        .order("next_due_on", { ascending: true, nullsFirst: false }),
+    ]);
 
   if (!asset) notFound();
   const typedAsset = asset as AssetJoined;
   const attachmentList = (attachments ?? []) as Attachment[];
+  const scheduleList = (schedules ?? []) as MaintenanceSchedule[];
 
   // Private bucket -> short-lived signed URLs for display.
   const signedUrls = new Map<string, string>();
@@ -98,6 +106,11 @@ export default async function AssetDetailPage({
           <Fact label="Price" value={formatCents(typedAsset.purchase_price_cents)} />
         </CardContent>
       </Card>
+
+      <section className="mb-8">
+        <h2 className="mb-2 text-base font-semibold">Maintenance</h2>
+        <MaintenanceManager assetId={id} initial={scheduleList} />
+      </section>
 
       <section className="mb-8">
         <h2 className="mb-2 text-base font-semibold">Photos & receipts</h2>

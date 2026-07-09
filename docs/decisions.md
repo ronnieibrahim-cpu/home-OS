@@ -111,3 +111,42 @@ CLAUDE home os.md.
 
 **Why:** A home purchase price in cents approaches the `integer` ceiling uncomfortably;
 `bigint` removes the class of bug entirely at zero practical cost.
+
+---
+
+## ADR-008 — Optimistic UI on the money & maintenance surfaces
+
+**Context:** The app is used primarily on an iPhone, where every tap that waits on a
+Supabase round-trip feels sluggish. The interactive Phase-1 surfaces — adding a recurring
+commitment or expense, marking a maintenance schedule done, deleting a row — are exactly the
+taps that recur daily.
+
+**Decision:** These mutations use React 19 `useOptimistic`. The list updates on tap, then a
+server action persists the change and calls `revalidatePath`; the refreshed server data rebases
+the optimistic state. Server actions on these paths **return a result object and revalidate
+instead of `redirect`-ing** (unlike the homes/rooms/assets create actions, which navigate). All
+validation and `household_id` resolution stay on the server; the optimistic layer is purely
+presentational. The monthly total on the Money screen is recomputed on the client from the same
+formula as `v_monthly_recurring_costs`, so it moves the instant a commitment is added.
+
+**Why:** The screen responds immediately while the database syncs in the background — the
+iPhone-first feel the product calls for — without moving business logic into the browser or
+trusting client-side writes. The full-navigation create/edit flows (homes, rooms, assets) keep
+their redirect pattern; only the high-frequency, in-place list mutations are optimistic.
+
+---
+
+## ADR-009 — Deploy on Vercel from GitHub, Supabase keys as env vars
+
+**Context:** CLAUDE home os.md mandates Vercel hosting so the app is reachable from an iPhone
+anywhere, not just on the home Wi-Fi.
+
+**Decision:** The GitHub repo is connected to a Vercel project; every push to the default branch
+auto-deploys. The two `NEXT_PUBLIC_SUPABASE_*` values are set as Vercel Environment Variables
+(not committed — `.env*` is gitignored). No `service_role` key ever reaches Vercel or the
+browser; the app talks to Supabase only with the anon key under RLS. Steps are documented in
+`docs/deployment.md`.
+
+**Why:** Push-to-deploy keeps operations to zero, and Supabase RLS (ADR-006) means the anon key
+is safe to ship to the client. Keeping secrets in Vercel's env store rather than the repo is the
+standard, auditable seam.

@@ -6,6 +6,20 @@ product vision and `docs/ontology.md` for the data model.
 **Stack:** Next.js (App Router) + TypeScript · Supabase (Postgres, Auth, Storage) ·
 Tailwind + shadcn/ui · mobile-first (iPhone Safari primary).
 
+## What's in it (Phase 1)
+
+- **Home → Rooms → Assets** — track appliances, vehicles, systems, and house parts, each with
+  photos, receipts, and manuals.
+- **Maintenance schedules** — recurring upkeep on any asset ("replace filter every 3 months").
+  Tap **Done** and the next-due date advances and a service log is recorded.
+- **Money** — recurring commitments (mortgage, utilities, insurance, subscriptions) and one-time
+  expenses, each optionally attached to the home or asset it's for.
+- **Dashboard** (the home screen) — your recurring **cost of living per month** and the
+  **upcoming maintenance** across every asset, with overdue items flagged.
+
+The money and maintenance screens use **optimistic updates**: a tap changes the screen
+immediately and syncs to Supabase in the background, so it feels instant on an iPhone.
+
 ## First-time setup
 
 You need a free Supabase project and about 10 minutes.
@@ -62,6 +76,13 @@ creates the household record automatically.
 
 To use it from your iPhone on the same Wi-Fi: run `npm run dev -- -H 0.0.0.0` and open
 `http://YOUR-COMPUTER-IP:3000` in Safari.
+
+## Deploy it (use it anywhere on your iPhone)
+
+To run it at a real URL — not just on your home Wi-Fi — deploy to Vercel from this GitHub repo.
+Step-by-step (import the repo, set the two Supabase env vars, point Supabase auth at the live
+URL, Add to Home Screen) is in **[`docs/deployment.md`](docs/deployment.md)**. After the first
+setup, every push to `main` redeploys automatically.
 
 ## Development workflow
 
