@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dollarsToCents, textOrNull } from "@/lib/format";
 import { ASSET_CATEGORIES } from "@/lib/types";
+import type { AssetKnowledgeDetails } from "@/lib/knowledge/pack";
+
+type Result = { error?: string };
 
 function assetFromForm(formData: FormData) {
   const category = String(formData.get("category") ?? "other");
@@ -79,4 +82,41 @@ export async function deleteAsset(assetId: string) {
     redirect(`/assets/${assetId}?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/assets");
   redirect("/assets");
+}
+
+// Merges a patch into the free-form `assets.details` JSONB column. Used by the
+// knowledge-pack UI to store the confirmed/overridden subtype, dismissed
+// suggestion keys, and replacement-estimate edits — all without a schema
+// change (see docs/decisions.md ADR-010). Revalidates instead of redirecting
+// so the calling component can update optimistically.
+export async function updateAssetKnowledgeDetails(
+  assetId: string,
+  patch: Partial<AssetKnowledgeDetails>
+): Promise<Result> {
+  const supabase = await createClient();
+
+  const { data: current, error: readError } = await supabase
+    .from("assets")
+    .select("details")
+    .eq("id", assetId)
+    .maybeSingle();
+  if (readError || !current) return { error: readError?.message ?? "Asset not found" };
+
+  const merged = { ...(current.details ?? {}), ...patch };
+  const { error } = await supabase.from("assets").update({ details: merged }).eq("id", assetId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/assets/${assetId}`);
+  revalidatePath("/assets/suggestions");
+  return {};
+}
+
+export async function dismissMaintenanceSuggestion(
+  assetId: string,
+  suggestionKey: string,
+  currentDismissed: string[]
+): Promise<Result> {
+  return updateAssetKnowledgeDetails(assetId, {
+    dismissed_suggestions: [...currentDismissed, suggestionKey],
+  });
 }

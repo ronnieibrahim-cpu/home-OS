@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dollarsToCents, textOrNull } from "@/lib/format";
 import { advanceDate, todayISO } from "@/lib/schedule";
 import { MAINTENANCE_INTERVAL_UNITS } from "@/lib/types";
+import type { SuggestedSchedule } from "@/lib/knowledge/pack";
 
 // These actions revalidate (not redirect) and return a plain result object, so
 // the optimistic client components can update the screen on tap and reconcile
@@ -77,6 +78,60 @@ export async function markMaintenanceDone(scheduleId: string): Promise<Result> {
   revalidatePath(`/assets/${schedule.asset_id}`);
   revalidatePath("/");
   return {};
+}
+
+// One-tap-accept a knowledge-pack suggestion: insert it as a real schedule
+// with today + the suggestion's interval as the first due date.
+export async function acceptMaintenanceSuggestion(
+  assetId: string,
+  suggestion: SuggestedSchedule
+): Promise<Result> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("maintenance_schedules").insert({
+    asset_id: assetId,
+    name: suggestion.name,
+    description: suggestion.description,
+    interval_value: suggestion.intervalValue,
+    interval_unit: suggestion.intervalUnit,
+    next_due_on: advanceDate(todayISO(), suggestion.intervalValue, suggestion.intervalUnit),
+    estimated_cost_cents: suggestion.estimatedCostMidCents,
+    is_active: true,
+  });
+
+  if (error) return { error: error.message };
+  revalidatePath(`/assets/${assetId}`);
+  revalidatePath("/assets/suggestions");
+  revalidatePath("/");
+  return {};
+}
+
+// Bulk-accept suggestions across many assets from the review screen.
+export async function acceptMaintenanceSuggestionsBulk(
+  items: { assetId: string; suggestion: SuggestedSchedule }[]
+): Promise<Result & { addedCount?: number }> {
+  if (items.length === 0) return {};
+  const supabase = await createClient();
+  const today = todayISO();
+  const rows = items.map(({ assetId, suggestion }) => ({
+    asset_id: assetId,
+    name: suggestion.name,
+    description: suggestion.description,
+    interval_value: suggestion.intervalValue,
+    interval_unit: suggestion.intervalUnit,
+    next_due_on: advanceDate(today, suggestion.intervalValue, suggestion.intervalUnit),
+    estimated_cost_cents: suggestion.estimatedCostMidCents,
+    is_active: true,
+  }));
+
+  const { error } = await supabase.from("maintenance_schedules").insert(rows);
+  if (error) return { error: error.message };
+
+  revalidatePath("/assets/suggestions");
+  for (const assetId of new Set(items.map((i) => i.assetId))) {
+    revalidatePath(`/assets/${assetId}`);
+  }
+  revalidatePath("/");
+  return { addedCount: rows.length };
 }
 
 export async function deleteMaintenanceSchedule(

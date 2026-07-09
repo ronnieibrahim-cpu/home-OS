@@ -1,0 +1,13 @@
+{
+  "_source": "Vehicle curve: widely-cited new-car depreciation studies (iSeeCars.com annual 5-Year Depreciation study; Carfax/Consumer Reports commentary) commonly summarized as 'a new car loses ~20% of its value in year one and ~60% of its value by year five', tapering afterward. The fractions below (fraction of original purchase price retained, indexed by completed years of age) approximate that commonly-cited curve out to 10 years, flat beyond that. Appliance/system model: straight-line depreciation to a small salvage value is the standard 'Actual Cash Value' (ACV) method used industry-wide for insurance claims on household personal property (Insurance Information Institute; see also IRS Publication 946 for the general concept of spreading an asset's cost over its useful life) — value declines linearly from purchase price to a salvage floor over the item's expected lifespan.",
+  "vehicle": {
+    "method": "table",
+    "retainedFractionByAge": [1.0, 0.80, 0.69, 0.60, 0.53, 0.47, 0.42, 0.37, 0.33, 0.30, 0.28],
+    "note": "Index = completed years of age (0 = brand new). Age beyond the table length uses the last value."
+  },
+  "appliance": {
+    "method": "straight-line",
+    "salvageFraction": 0.1,
+    "note": "value = purchasePrice * max(salvageFraction, 1 - ageYears / lifespanYears); lifespanYears comes from lifespans.json for the matched subtype."
+  }
+}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { AssetsBrowser } from "@/components/assets-browser";
@@ -32,6 +32,13 @@ export default async function AssetsPage({
           </Button>
         }
       />
+      <Link
+        href="/assets/suggestions"
+        className="mb-4 flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground transition-colors active:bg-accent"
+      >
+        <Sparkles className="size-4 shrink-0" />
+        Review suggested maintenance for your assets
+      </Link>
       <AssetsBrowser
         assets={(assets ?? []) as AssetWithRoom[]}
         initialCategory={category}

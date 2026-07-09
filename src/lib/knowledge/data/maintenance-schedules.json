@@ -1,0 +1,49 @@
+{
+  "_source": "Household systems & appliances: manufacturer owner's-manual guidance aggregated by the U.S. Department of Energy 'Energy Saver' maintenance checklists (energy.gov) and ENERGY STAR HVAC maintenance guidance (filter changes, annual tune-ups); NFPA 211 / U.S. Fire Administration guidance on annual dryer-vent cleaning (fire-prevention basis); National Roofing Contractors Association (NRCA) and This Old House guidance on annual roof inspection and twice-yearly (spring/fall) gutter cleaning; typical manufacturer care-guide intervals (GE, Whirlpool, Samsung, LG) for refrigerator coil cleaning and water-filter replacement, dishwasher filter/spray-arm cleaning, and washer hose/gasket checks. Cost ranges are 2024-2025 U.S. national-average service-call ranges per Angi and HomeAdvisor cost guides — treat as ballpark, not a quote. Vehicle tasks: typical manufacturer maintenance-schedule intervals (commonly 5,000-7,500 mi for conventional oil, ~annual for synthetic; 6,000 mi tire rotation; annual brake/battery/cabin-filter check), converted to calendar cadence using the FHWA/Federal Highway Administration average of ~13,500 miles driven per year in the U.S. — Phase 1 schedules are calendar-based only (see docs/ontology.md maintenance_schedules), so mileage intervals are approximated as time. Vehicle service cost ranges per RepairPal and Angi national averages. These are defaults meant to be edited per household, not authoritative recommendations for a specific make/model.",
+  "bySubtype": {
+    "hvac": [
+      { "task": "Replace air filter", "intervalValue": 3, "intervalUnit": "month", "costLowCents": 1500, "costHighCents": 4000 },
+      { "task": "Professional HVAC tune-up / inspection", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 10000, "costHighCents": 25000 }
+    ],
+    "water_heater": [
+      { "task": "Flush tank (sediment drain)", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 0, "costHighCents": 15000, "description": "DIY drain is free; a plumber service call typically runs $75-$150" },
+      { "task": "Test / inspect anode rod", "intervalValue": 3, "intervalUnit": "year", "costLowCents": 15000, "costHighCents": 30000 }
+    ],
+    "roof": [
+      { "task": "Roof inspection", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 15000, "costHighCents": 40000 }
+    ],
+    "gutters": [
+      { "task": "Clean gutters & downspouts", "intervalValue": 6, "intervalUnit": "month", "costLowCents": 12000, "costHighCents": 25000 }
+    ],
+    "refrigerator": [
+      { "task": "Clean condenser coils", "intervalValue": 6, "intervalUnit": "month", "costLowCents": 0, "costHighCents": 15000, "description": "DIY vacuum is free; a service call runs roughly $75-$150" },
+      { "task": "Replace water/ice filter", "intervalValue": 6, "intervalUnit": "month", "costLowCents": 2000, "costHighCents": 6000 }
+    ],
+    "dishwasher": [
+      { "task": "Clean filter & spray arms", "intervalValue": 1, "intervalUnit": "month", "costLowCents": 0, "costHighCents": 0 },
+      { "task": "Inspect door seal & inlet hose", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 0, "costHighCents": 15000 }
+    ],
+    "washer": [
+      { "task": "Run cleaning cycle / clean gasket", "intervalValue": 1, "intervalUnit": "month", "costLowCents": 0, "costHighCents": 1500 },
+      { "task": "Inspect / replace supply hoses", "intervalValue": 5, "intervalUnit": "year", "costLowCents": 2000, "costHighCents": 6000, "description": "Preventive replacement reduces flood risk even if hoses look fine" }
+    ],
+    "dryer": [
+      { "task": "Clean dryer vent duct", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 10000, "costHighCents": 20000, "description": "Lint-fire prevention (NFPA 211 / U.S. Fire Administration guidance)" }
+    ],
+    "range_oven": [
+      { "task": "Deep clean interior & burners", "intervalValue": 3, "intervalUnit": "month", "costLowCents": 0, "costHighCents": 15000 },
+      { "task": "Gas line & igniter inspection (gas models)", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 8000, "costHighCents": 15000 }
+    ],
+    "microwave": [
+      { "task": "Clean grease filter (over-range models)", "intervalValue": 3, "intervalUnit": "month", "costLowCents": 0, "costHighCents": 3000 }
+    ],
+    "vehicle": [
+      { "task": "Oil & filter change", "intervalValue": 6, "intervalUnit": "month", "costLowCents": 4000, "costHighCents": 12000 },
+      { "task": "Tire rotation", "intervalValue": 6, "intervalUnit": "month", "costLowCents": 2000, "costHighCents": 5000 },
+      { "task": "Brake inspection", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 0, "costHighCents": 15000 },
+      { "task": "Replace cabin air filter", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 2000, "costHighCents": 6000 },
+      { "task": "Battery test", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 0, "costHighCents": 3000 },
+      { "task": "State inspection / emissions test", "intervalValue": 1, "intervalUnit": "year", "costLowCents": 1500, "costHighCents": 7000, "description": "Only applies where your state/locality requires it" }
+    ]
+  }
+}

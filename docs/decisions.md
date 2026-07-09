@@ -150,3 +150,34 @@ browser; the app talks to Supabase only with the anon key under RLS. Steps are d
 **Why:** Push-to-deploy keeps operations to zero, and Supabase RLS (ADR-006) means the anon key
 is safe to ship to the client. Keeping secrets in Vercel's env store rather than the repo is the
 standard, auditable seam.
+
+---
+
+## ADR-010 — Static maintenance/lifespan/depreciation knowledge pack, no schema change
+
+**Context:** The household wants suggested maintenance schedules and a replacement year/cost
+estimate for common asset kinds (HVAC, water heater, roof, gutters, vehicles, major appliances)
+without calling an external API. Assets have no `subtype` column (ADR-001: type-specific facts
+live in `details` JSONB until they earn a real column) and `maintenance_schedules` is calendar-
+based only, not mileage-based.
+
+**Decision:** A static knowledge pack ships in the repo at `src/lib/knowledge/` — JSON tables
+(`data/subtypes.json`, `data/maintenance-schedules.json`, `data/lifespans.json`,
+`data/depreciation-curves.json`), each citing its basis in a `_source` field, plus `pack.ts` for
+matching/estimation logic. An asset's "kind" (subtype) is *guessed* by keyword-matching its
+`name` against the pack, scoped to its `category`; no new column. The household's confirmation,
+dismissed suggestions, and any edited replacement estimate are written into the existing
+`assets.details` JSONB column under three conventional keys: `subtype`, `dismissed_suggestions`,
+`replacement_year_override` / `replacement_cost_cents_override`. Accepting a suggested schedule
+inserts a normal row into `maintenance_schedules` — the pack is purely a source of *defaults*,
+never a new source of truth.
+
+**Why:** Keeps the feature entirely inside Phase 1's existing tables (no migration, nothing new
+to reflect here beyond this note) while still giving the household one-tap suggestions and an
+editable estimate. If subtype ever needs to be reliable (not a guess) or maintenance needs
+mileage-based cadence, promote `details.subtype` to a real `assets.subtype` column then — per
+ADR-001, not before.
+
+**Known limitation:** subtype matching is a best-effort keyword guess against the asset name; it
+can be wrong (hence the always-visible "not right? pick one" control) and only covers the
+system/appliance/vehicle categories the pack has data for.

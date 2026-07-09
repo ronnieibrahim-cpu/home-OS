@@ -1,0 +1,19 @@
+{
+  "_source": "Internal taxonomy devised for this app to group the asset kinds explicitly called out in the household-maintenance knowledge pack (HVAC, water heater, roof, gutters, common vehicle body styles, major kitchen/laundry appliances). Not derived from a single external standard — it exists only to key the maintenance/lifespan/depreciation tables below and to drive best-effort matching against an asset's free-text name. `assetCategory` mirrors the `assets.category` CHECK list in docs/ontology.md.",
+  "subtypes": [
+    { "id": "hvac", "label": "HVAC system (furnace / central air / heat pump)", "assetCategory": "system", "keywords": ["hvac", "furnace", "central air", "air conditioner", "air conditioning", "heat pump", "a/c", "ac unit", "condenser"] },
+    { "id": "water_heater", "label": "Water heater", "assetCategory": "system", "keywords": ["water heater", "hot water heater", "tankless water heater", "boiler"] },
+    { "id": "roof", "label": "Roof", "assetCategory": "system", "keywords": ["roof", "shingle", "shingles"] },
+    { "id": "gutters", "label": "Gutters", "assetCategory": "system", "keywords": ["gutter", "gutters", "downspout"] },
+    { "id": "refrigerator", "label": "Refrigerator", "assetCategory": "appliance", "keywords": ["refrigerator", "fridge", "freezer"] },
+    { "id": "dishwasher", "label": "Dishwasher", "assetCategory": "appliance", "keywords": ["dishwasher"] },
+    { "id": "washer", "label": "Clothes washer", "assetCategory": "appliance", "keywords": ["washer", "washing machine"] },
+    { "id": "dryer", "label": "Clothes dryer", "assetCategory": "appliance", "keywords": ["dryer"] },
+    { "id": "range_oven", "label": "Range / oven / stove", "assetCategory": "appliance", "keywords": ["range", "oven", "stove", "cooktop"] },
+    { "id": "microwave", "label": "Microwave", "assetCategory": "appliance", "keywords": ["microwave"] },
+    { "id": "vehicle_truck", "label": "Pickup truck", "assetCategory": "vehicle", "keywords": ["truck", "pickup", "f-150", "f150", "silverado", "sierra", "ram 1500", "tacoma", "tundra", "ranger", "colorado"] },
+    { "id": "vehicle_suv", "label": "SUV / crossover", "assetCategory": "vehicle", "keywords": ["suv", "crossover", "explorer", "tahoe", "suburban", "highlander", "4runner", "cr-v", "crv", "rav4", "pilot", "traverse", "expedition", "wrangler", "grand cherokee"] },
+    { "id": "vehicle_minivan", "label": "Minivan", "assetCategory": "vehicle", "keywords": ["minivan", "van", "odyssey", "sienna", "pacifica", "carnival"] },
+    { "id": "vehicle_sedan", "label": "Sedan / car", "assetCategory": "vehicle", "keywords": ["sedan", "car", "coupe", "hatchback"] }
+  ]
+}

@@ -129,7 +129,7 @@ Two deliberate decisions (see `docs/decisions.md` for the full reasoning):
 | `manufacturer`, `model_number`, `serial_number` | text | optional |
 | `purchase_date` | date | optional |
 | `purchase_price_cents` | bigint | optional |
-| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}` |
+| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}`. The maintenance knowledge pack (`src/lib/knowledge/`, ADR-010) also writes `subtype`, `dismissed_suggestions`, `replacement_year_override`, and `replacement_cost_cents_override` here — conventional keys, not schema. |
 | `status` | text | `active` (default) or `disposed` — sold/trashed assets keep their history instead of being deleted |
 
 ---

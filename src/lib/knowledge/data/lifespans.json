@@ -1,0 +1,19 @@
+{
+  "_source": "Home systems & major appliances: the National Association of Home Builders / Bank of America Home Equity 'Study of Life Expectancy of Home Components' (2007) is the standard, widely-cited baseline for U.S. residential component lifespans (HVAC ~15-20yr, water heater ~10-15yr tank, asphalt-shingle roof ~20-25yr, aluminum gutters ~20yr, major kitchen/laundry appliances ~9-15yr); figures are cross-checked against InterNACHI's 'Standard Estimated Life Expectancy Chart' for home inspectors and Consumer Reports appliance-reliability lifespan data. Vehicles: average U.S. vehicle age at scrappage / typical useful life is commonly cited around 12 years by S&P Global Mobility (formerly IHS Markit) and the U.S. Bureau of Transportation Statistics; a 10-15 year range is used here to cover body styles and usage patterns. Replacement costs are ballpark 2024-2025 U.S. national averages: systems/appliances from Angi and HomeAdvisor cost guides; vehicles from Kelley Blue Book / Cox Automotive average new-transaction-price bands by segment. All figures are rough planning ranges, not quotes — local market, brand, and size vary widely.",
+  "bySubtype": {
+    "hvac": { "lifespanYearsLow": 15, "lifespanYearsHigh": 20, "replacementCostLowCents": 500000, "replacementCostHighCents": 1200000 },
+    "water_heater": { "lifespanYearsLow": 10, "lifespanYearsHigh": 15, "replacementCostLowCents": 120000, "replacementCostHighCents": 350000 },
+    "roof": { "lifespanYearsLow": 20, "lifespanYearsHigh": 25, "replacementCostLowCents": 800000, "replacementCostHighCents": 2500000 },
+    "gutters": { "lifespanYearsLow": 18, "lifespanYearsHigh": 22, "replacementCostLowCents": 150000, "replacementCostHighCents": 400000 },
+    "refrigerator": { "lifespanYearsLow": 10, "lifespanYearsHigh": 15, "replacementCostLowCents": 80000, "replacementCostHighCents": 300000 },
+    "dishwasher": { "lifespanYearsLow": 9, "lifespanYearsHigh": 12, "replacementCostLowCents": 45000, "replacementCostHighCents": 150000 },
+    "washer": { "lifespanYearsLow": 10, "lifespanYearsHigh": 13, "replacementCostLowCents": 55000, "replacementCostHighCents": 180000 },
+    "dryer": { "lifespanYearsLow": 10, "lifespanYearsHigh": 13, "replacementCostLowCents": 45000, "replacementCostHighCents": 150000 },
+    "range_oven": { "lifespanYearsLow": 13, "lifespanYearsHigh": 15, "replacementCostLowCents": 60000, "replacementCostHighCents": 250000 },
+    "microwave": { "lifespanYearsLow": 7, "lifespanYearsHigh": 10, "replacementCostLowCents": 15000, "replacementCostHighCents": 60000 },
+    "vehicle_sedan": { "lifespanYearsLow": 12, "lifespanYearsHigh": 15, "replacementCostLowCents": 2500000, "replacementCostHighCents": 3800000 },
+    "vehicle_suv": { "lifespanYearsLow": 12, "lifespanYearsHigh": 15, "replacementCostLowCents": 3200000, "replacementCostHighCents": 5000000 },
+    "vehicle_truck": { "lifespanYearsLow": 12, "lifespanYearsHigh": 16, "replacementCostLowCents": 3800000, "replacementCostHighCents": 6000000 },
+    "vehicle_minivan": { "lifespanYearsLow": 12, "lifespanYearsHigh": 15, "replacementCostLowCents": 3300000, "replacementCostHighCents": 4800000 }
+  }
+}

@@ -10,9 +10,17 @@ import { ErrorBanner } from "@/components/error-banner";
 import { DeleteForm } from "@/components/delete-form";
 import { AttachmentUploader } from "@/components/attachment-uploader";
 import { MaintenanceManager } from "@/components/maintenance-manager";
+import { AssetKnowledgePanel } from "@/components/asset-knowledge-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  estimateCurrentValue,
+  estimateReplacement,
+  getMissingSuggestions,
+  listSubtypes,
+  matchSubtype,
+} from "@/lib/knowledge/pack";
 import type { Asset, Attachment, MaintenanceSchedule } from "@/lib/types";
 
 type AssetJoined = Asset & {
@@ -73,6 +81,18 @@ export default async function AssetDetailPage({
   const photos = attachmentList.filter((a) => a.mime_type?.startsWith("image/"));
   const files = attachmentList.filter((a) => !a.mime_type?.startsWith("image/"));
 
+  const subtype = matchSubtype(typedAsset);
+  const subtypeOptions = listSubtypes().filter((s) => s.assetCategory === typedAsset.category);
+  const suggestions = getMissingSuggestions(
+    typedAsset,
+    scheduleList.map((s) => s.name)
+  );
+  const dismissedKeys =
+    ((typedAsset.details as { dismissed_suggestions?: string[] } | null)?.dismissed_suggestions) ??
+    [];
+  const replacement = estimateReplacement(typedAsset);
+  const currentValue = estimateCurrentValue(typedAsset);
+
   return (
     <div>
       <PageHeader
@@ -106,6 +126,21 @@ export default async function AssetDetailPage({
           <Fact label="Price" value={formatCents(typedAsset.purchase_price_cents)} />
         </CardContent>
       </Card>
+
+      {(subtypeOptions.length > 0 || replacement) && (
+        <section className="mb-8">
+          <h2 className="mb-2 text-base font-semibold">Estimates</h2>
+          <AssetKnowledgePanel
+            assetId={id}
+            subtype={subtype}
+            subtypeOptions={subtypeOptions}
+            suggestions={suggestions}
+            dismissedKeys={dismissedKeys}
+            replacement={replacement}
+            currentValue={currentValue}
+          />
+        </section>
+      )}
 
       <section className="mb-8">
         <h2 className="mb-2 text-base font-semibold">Maintenance</h2>
