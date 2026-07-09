@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/submit-button";
 import { centsToDollarsInput } from "@/lib/format";
 import type { Home } from "@/lib/types";
 
@@ -125,9 +125,7 @@ export function HomeForm({
         </Field>
       </div>
 
-      <Button type="submit" size="lg" className="mt-2 h-12">
-        {submitLabel}
-      </Button>
+      <SubmitButton className="mt-2 h-12">{submitLabel}</SubmitButton>
     </form>
   );
 }

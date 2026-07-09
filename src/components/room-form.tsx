@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SubmitButton } from "@/components/submit-button";
 import type { Room } from "@/lib/types";
 
 export function RoomForm({
@@ -45,9 +45,7 @@ export function RoomForm({
           className="text-base"
         />
       </div>
-      <Button type="submit" size="lg" className="mt-2 h-12">
-        {submitLabel}
-      </Button>
+      <SubmitButton className="mt-2 h-12">{submitLabel}</SubmitButton>
     </form>
   );
 }

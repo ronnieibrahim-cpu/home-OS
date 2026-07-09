@@ -1,7 +1,7 @@
 import { signIn } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function LoginPage({
   searchParams,
@@ -48,9 +48,7 @@ export default async function LoginPage({
             className="h-12 text-base"
           />
         </div>
-        <Button type="submit" size="lg" className="mt-2 h-12">
-          Sign in
-        </Button>
+        <SubmitButton className="mt-2 h-12">Sign in</SubmitButton>
       </form>
     </main>
   );

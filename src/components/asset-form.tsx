@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/submit-button";
 import { centsToDollarsInput } from "@/lib/format";
 import { ASSET_CATEGORIES, type Asset, type Home, type Room } from "@/lib/types";
 
@@ -168,9 +168,7 @@ export function AssetForm({
         </div>
       )}
 
-      <Button type="submit" size="lg" className="mt-2 h-12">
-        {submitLabel}
-      </Button>
+      <SubmitButton className="mt-2 h-12">{submitLabel}</SubmitButton>
     </form>
   );
 }
