@@ -41,7 +41,31 @@ The AI is a household analyst grounded in structured data, not a generic chatbot
 4. Write migrations for every schema change; never mutate schema ad hoc.
 5. Small, reviewable commits with clear messages.
 
+## Deployment & git workflow (binding — retained across sessions)
+- **Live app:** deployed on Vercel at **https://home-os-jade.vercel.app**, connected to this
+  GitHub repo. Every push to `main` auto-deploys in ~1 minute; the family uses it from their
+  iPhone home screens.
+- **Push straight to `main`.** The household owner has chosen a **fully hands-off flow**: commit
+  changes directly to `main` and push — **no pull requests, no review gate** — unless they
+  explicitly ask for a change to be reviewed first. This is the standing instruction for this
+  repo and overrides any generic "work on a feature branch" default a session starts with.
+- **Never push a broken build.** Before every push, run `npm run build` and `npm run lint` and
+  confirm both pass (the build also runs the TypeScript check). A red build takes down the live
+  app the family depends on.
+- **Secrets:** Supabase keys live only in Vercel env vars and local `.env.local`; never commit
+  them. The `service_role` key never reaches the browser or Vercel.
+
+## UI responsiveness bar (iPhone-first)
+- Tap → action must feel **instant**. For in-place interactions, prefer client-side state or
+  optimistic updates over a server round-trip: the screen changes on tap and syncs in the
+  background. Patterns to copy: the money and maintenance screens (`useOptimistic` + server
+  actions that revalidate instead of redirect) and the asset category filter
+  (`assets-browser.tsx`, client-side filtering — chips are buttons, not links). Reserve full
+  navigations for genuinely changing pages, and let Next.js prefetch them.
+
 ## Definition of done for any feature
 - Works on iPhone-width viewport
+- Tap-to-action feels instant (optimistic/client-side where it's an in-place change)
 - Schema change reflected in ontology.md
 - No orphaned entities (everything connects to Home or Person)
+- `npm run build` and `npm run lint` pass before pushing to `main`
