@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { House, Plus, ChevronRight, Wallet, Wrench } from "lucide-react";
+import { House, Plus, ChevronRight, Wallet, Wrench, LineChart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { formatCents } from "@/lib/format";
@@ -70,6 +70,24 @@ export default async function DashboardPage() {
               <p className="text-3xl font-semibold tabular-nums">
                 {formatCents(monthlyTotal)}
                 <span className="text-base font-normal text-muted-foreground">/mo</span>
+              </p>
+            </div>
+            <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      {/* Budget & forecast */}
+      <Link href="/budget" className="mb-6 block">
+        <Card className="transition-colors active:bg-accent">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <LineChart className="size-6 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">Budget &amp; forecast</p>
+              <p className="text-sm text-muted-foreground">
+                This month, 24-month outlook, and a home-purchase scenario
               </p>
             </div>
             <ChevronRight className="size-5 shrink-0 text-muted-foreground" />

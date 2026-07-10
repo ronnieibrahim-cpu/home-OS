@@ -129,7 +129,7 @@ Two deliberate decisions (see `docs/decisions.md` for the full reasoning):
 | `manufacturer`, `model_number`, `serial_number` | text | optional |
 | `purchase_date` | date | optional |
 | `purchase_price_cents` | bigint | optional |
-| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}`. The maintenance knowledge pack (`src/lib/knowledge/`, ADR-010) also writes `subtype`, `dismissed_suggestions`, `replacement_year_override`, and `replacement_cost_cents_override` here — conventional keys, not schema. |
+| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}`. The maintenance knowledge pack (`src/lib/knowledge/`, ADR-010) also writes `subtype`, `dismissed_suggestions`, `replacement_year_override`, and `replacement_cost_cents_override` here — conventional keys, not schema. For vehicles, the make/model-aware retool (ADR-012) adds a `powertrain` key (`gas`/`hybrid`/`phev`/`electric`) overriding the guessed value — so an EV gets no oil change. |
 | `status` | text | `active` (default) or `disposed` — sold/trashed assets keep their history instead of being deleted |
 
 ---
@@ -288,3 +288,18 @@ Per the phased-scope rule ("do not build ahead of the current phase"):
 - **Meals, recipes, travel, shopping** — later.
 - **Auto-generation of expenses from recurring commitments, or auto-advancing `next_due_on`** —
   application behavior, decided when the app is built; the schema supports either choice.
+
+## Budget & Forecast (computed, no new tables)
+
+The **Budget & Forecast** feature (`/budget`, ADR-011) adds **no tables and no columns**. Its three
+views are pure computed reads over the existing money/asset tables:
+
+- **This month** blends `recurring_expenses` (normalized monthly), amortized
+  `maintenance_schedules.estimated_cost_cents`, and a trailing average of uncommitted `expenses`.
+- **Forecast (24 months)** projects those same rows forward, dropping each scheduled service and
+  each knowledge-pack **predicted replacement** into the month it lands.
+- **Home purchase** is a deterministic amortization calculator whose inputs live entirely in the
+  URL query string — nothing is persisted.
+
+The math lives in `src/lib/budget/` (`mortgage.ts`, `current-budget.ts`, `forecast.ts`); the
+screen is `src/app/(app)/budget/`.

@@ -1,9 +1,21 @@
 {
-  "_source": "Vehicle curve: widely-cited new-car depreciation studies (iSeeCars.com annual 5-Year Depreciation study; Carfax/Consumer Reports commentary) commonly summarized as 'a new car loses ~20% of its value in year one and ~60% of its value by year five', tapering afterward. The fractions below (fraction of original purchase price retained, indexed by completed years of age) approximate that commonly-cited curve out to 10 years, flat beyond that. Appliance/system model: straight-line depreciation to a small salvage value is the standard 'Actual Cash Value' (ACV) method used industry-wide for insurance claims on household personal property (Insurance Information Institute; see also IRS Publication 946 for the general concept of spreading an asset's cost over its useful life) — value declines linearly from purchase price to a salvage floor over the item's expected lifespan.",
+  "_source": "Vehicle curves: widely-cited new-car depreciation studies (iSeeCars.com annual 5-Year Depreciation study; Carfax/Consumer Reports commentary) commonly summarized as 'a gas car loses ~20% of its value in year one and ~60% by year five', tapering afterward. Battery-electric vehicles have historically depreciated FASTER in the early years (iSeeCars EV depreciation studies report noticeably higher 5-year loss than the market average, driven by fast-moving battery/range tech, expiring tax incentives, and rapid new-model releases), so a separate, steeper EV curve is used. Segment-tier multipliers scale the body-style replacement-cost band (from lifespans.json) by typical new-transaction-price band per Kelley Blue Book / Cox Automotive brand data — a luxury EV costs far more to replace than an economy sedan of the same body style. All fractions are 'fraction of original purchase price retained, indexed by completed years of age'; ages beyond the table use the last value. Appliance/system model: straight-line depreciation to a small salvage value is the standard 'Actual Cash Value' (ACV) method used industry-wide for insurance claims on household personal property (Insurance Information Institute; see also IRS Publication 946) — value declines linearly from purchase price to a salvage floor over the item's expected lifespan.",
   "vehicle": {
     "method": "table",
     "retainedFractionByAge": [1.0, 0.80, 0.69, 0.60, 0.53, 0.47, 0.42, 0.37, 0.33, 0.30, 0.28],
-    "note": "Index = completed years of age (0 = brand new). Age beyond the table length uses the last value."
+    "note": "Gas / hybrid / plug-in-hybrid curve. Index = completed years of age (0 = brand new). Age beyond the table length uses the last value."
+  },
+  "vehicle_electric": {
+    "method": "table",
+    "retainedFractionByAge": [1.0, 0.72, 0.58, 0.48, 0.40, 0.34, 0.29, 0.25, 0.22, 0.19, 0.17],
+    "note": "Battery-electric vehicles: steeper early depreciation than the gas curve. Index = completed years of age; age beyond the table uses the last value."
+  },
+  "_vehicleSegmentTierNote": "vehicleSegmentTierMultipliers multiplies the body-style replacement-cost band from lifespans.json so a luxury vehicle's estimated replacement cost is higher than an economy one of the same body style. Does not affect the retained-value curve (that runs off the asset's actual purchase price).",
+  "vehicleSegmentTierMultipliers": {
+    "economy": 0.8,
+    "mainstream": 1.0,
+    "premium": 1.35,
+    "luxury": 1.8
   },
   "appliance": {
     "method": "straight-line",

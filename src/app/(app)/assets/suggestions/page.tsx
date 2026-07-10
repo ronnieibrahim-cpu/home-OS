@@ -12,11 +12,14 @@ export default async function MaintenanceSuggestionsPage() {
 
   const { data: assets } = await supabase
     .from("assets")
-    .select("id, name, category, details")
+    .select("id, name, category, manufacturer, model_number, details")
     .eq("status", "active")
     .order("name");
 
-  const assetList = (assets ?? []) as Pick<Asset, "id" | "name" | "category" | "details">[];
+  const assetList = (assets ?? []) as Pick<
+    Asset,
+    "id" | "name" | "category" | "manufacturer" | "model_number" | "details"
+  >[];
   const assetIds = assetList.map((a) => a.id);
 
   const { data: schedules } =

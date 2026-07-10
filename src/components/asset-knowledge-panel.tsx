@@ -17,6 +17,16 @@ import type {
   Subtype,
 } from "@/lib/knowledge/pack";
 
+// Display data for a vehicle's powertrain, prepared on the server so this
+// client component doesn't pull in the knowledge pack's JSON.
+export type VehicleDisplay = {
+  powertrain: string;
+  label: string;
+  makeLabel: string | null;
+  overridden: boolean;
+  note: string | null;
+};
+
 // Shown on the asset detail page: knowledge-pack maintenance suggestions
 // (one-tap accept/dismiss) and an estimated replacement year/cost, both
 // clearly labeled as editable estimates — see docs/decisions.md ADR-010.
@@ -24,6 +34,8 @@ export function AssetKnowledgePanel({
   assetId,
   subtype,
   subtypeOptions,
+  vehicle,
+  powertrainOptions,
   suggestions: initialSuggestions,
   dismissedKeys,
   replacement,
@@ -32,6 +44,8 @@ export function AssetKnowledgePanel({
   assetId: string;
   subtype: Subtype | null;
   subtypeOptions: Subtype[];
+  vehicle: VehicleDisplay | null;
+  powertrainOptions: { id: string; label: string }[];
   suggestions: SuggestedSchedule[];
   dismissedKeys: string[];
   replacement: ReplacementEstimate | null;
@@ -72,6 +86,15 @@ export function AssetKnowledgePanel({
         options={subtypeOptions}
         onChanged={() => router.refresh()}
       />
+
+      {vehicle && (
+        <PowertrainPicker
+          assetId={assetId}
+          vehicle={vehicle}
+          options={powertrainOptions}
+          onChanged={() => router.refresh()}
+        />
+      )}
 
       {subtype && suggestions.length > 0 && (
         <div className="rounded-md border p-4">
@@ -175,6 +198,73 @@ function SubtypePicker({
         className={selectClass}
       >
         <option value="none">None of these / not applicable</option>
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
+        Cancel
+      </Button>
+    </div>
+  );
+}
+
+// Vehicles only: shows the guessed (or confirmed) powertrain and lets the
+// household correct it. Changing it re-derives the maintenance suggestions and
+// depreciation curve on the server (an EV drops the oil change).
+function PowertrainPicker({
+  assetId,
+  vehicle,
+  options,
+  onChanged,
+}: {
+  assetId: string;
+  vehicle: VehicleDisplay;
+  options: { id: string; label: string }[];
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function save(value: string) {
+    setSaving(true);
+    await updateAssetKnowledgeDetails(assetId, { powertrain: value as never });
+    setSaving(false);
+    setEditing(false);
+    onChanged();
+  }
+
+  const selectClass =
+    "h-10 w-full appearance-none rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring";
+
+  if (!editing) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Powertrain: <span className="font-medium">{vehicle.label}</span>
+        {vehicle.makeLabel ? ` (${vehicle.makeLabel})` : ""}
+        {vehicle.note ? ` — ${vehicle.note}` : ""}
+        {vehicle.overridden ? "" : " (guessed)"}{" "}
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="underline-offset-2 hover:underline"
+        >
+          Not right?
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        defaultValue={vehicle.powertrain}
+        disabled={saving}
+        onChange={(e) => save(e.target.value)}
+        className={selectClass}
+      >
         {options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.label}

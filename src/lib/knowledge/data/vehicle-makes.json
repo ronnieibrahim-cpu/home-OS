@@ -1,0 +1,39 @@
+{
+  "_source": "Make → market-segment tier and powertrain hints, used to make vehicle maintenance, replacement cost, and residual value make/model-aware without an external API (see docs/decisions.md ADR-012). Powertrain is detected by keyword-matching the asset's manufacturer + model + name; a household override in assets.details.powertrain always wins. Segment tiers group makes by typical new-transaction-price band (Kelley Blue Book / Cox Automotive average transaction price by brand, 2024-2025) into economy / mainstream / premium / luxury; the numeric cost + depreciation effect of each tier lives in depreciation-curves.json. EV / hybrid / plug-in-hybrid model keyword lists are curated from each maker's current lineup (e.g. Tesla = all-electric; Toyota Prius = hybrid, RAV4 Prime = plug-in hybrid; Chevrolet Bolt = electric, Volt = plug-in hybrid; Jeep 4xe = plug-in hybrid). Coverage is best-effort for common U.S. makes; an unrecognized make falls back to mainstream tier and a gas powertrain, always user-overridable.",
+  "tiers": ["economy", "mainstream", "premium", "luxury"],
+  "genericPowertrainKeywords": {
+    "phev": ["plug-in hybrid", "plug in hybrid", "plugin hybrid", "phev", "4xe", "prime", "volt", "energi", "recharge"],
+    "electric": ["electric", "bev", " ev", "e-tron", "mach-e"],
+    "hybrid": ["hybrid", "hev"]
+  },
+  "makes": [
+    { "id": "tesla", "label": "Tesla", "keywords": ["tesla", "model 3", "model y", "model s", "model x", "cybertruck"], "segmentTier": "luxury", "defaultPowertrain": "electric", "evKeywords": [], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "rivian", "label": "Rivian", "keywords": ["rivian", "r1t", "r1s"], "segmentTier": "luxury", "defaultPowertrain": "electric", "evKeywords": [], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "lucid", "label": "Lucid", "keywords": ["lucid"], "segmentTier": "luxury", "defaultPowertrain": "electric", "evKeywords": [], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "polestar", "label": "Polestar", "keywords": ["polestar"], "segmentTier": "luxury", "defaultPowertrain": "electric", "evKeywords": [], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "toyota", "label": "Toyota", "keywords": ["toyota"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["bz4x", "bz"], "phevKeywords": ["prime", "rav4 prime", "prius prime"], "hybridKeywords": ["prius", "hybrid"] },
+    { "id": "lexus", "label": "Lexus", "keywords": ["lexus"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["rz"], "phevKeywords": ["plug-in"], "hybridKeywords": ["hybrid", "500h", "450h", "350h"] },
+    { "id": "honda", "label": "Honda", "keywords": ["honda"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["prologue"], "phevKeywords": [], "hybridKeywords": ["hybrid", "insight"] },
+    { "id": "acura", "label": "Acura", "keywords": ["acura"], "segmentTier": "premium", "defaultPowertrain": "gas", "evKeywords": ["zdx"], "phevKeywords": [], "hybridKeywords": ["hybrid"] },
+    { "id": "ford", "label": "Ford", "keywords": ["ford"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["mach-e", "mustang mach-e", "lightning", "f-150 lightning", "e-transit"], "phevKeywords": ["energi"], "hybridKeywords": ["hybrid"] },
+    { "id": "lincoln", "label": "Lincoln", "keywords": ["lincoln"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": [], "phevKeywords": ["grand touring"], "hybridKeywords": ["hybrid"] },
+    { "id": "chevrolet", "label": "Chevrolet", "keywords": ["chevrolet", "chevy"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["bolt", "blazer ev", "equinox ev", "silverado ev"], "phevKeywords": ["volt"], "hybridKeywords": [] },
+    { "id": "gmc", "label": "GMC", "keywords": ["gmc"], "segmentTier": "premium", "defaultPowertrain": "gas", "evKeywords": ["hummer ev", "sierra ev"], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "cadillac", "label": "Cadillac", "keywords": ["cadillac"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["lyriq", "celestiq", "optiq"], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "nissan", "label": "Nissan", "keywords": ["nissan"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["leaf", "ariya"], "phevKeywords": [], "hybridKeywords": ["e-power"] },
+    { "id": "hyundai", "label": "Hyundai", "keywords": ["hyundai"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["ioniq 5", "ioniq 6", "ioniq5", "ioniq6", "kona electric"], "phevKeywords": ["plug-in"], "hybridKeywords": ["hybrid", "blue"] },
+    { "id": "kia", "label": "Kia", "keywords": ["kia"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["ev6", "ev9", "niro ev"], "phevKeywords": ["plug-in"], "hybridKeywords": ["hybrid"] },
+    { "id": "genesis", "label": "Genesis", "keywords": ["genesis"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["electrified", "gv60"], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "bmw", "label": "BMW", "keywords": ["bmw"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["i4", "ix", "i3", "i5", "i7"], "phevKeywords": ["xdrive45e", "edrive", "330e", "530e", "xdrive50e"], "hybridKeywords": [] },
+    { "id": "mercedes", "label": "Mercedes-Benz", "keywords": ["mercedes", "benz"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["eqs", "eqe", "eqb", "eqa"], "phevKeywords": ["e "], "hybridKeywords": [] },
+    { "id": "audi", "label": "Audi", "keywords": ["audi"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["e-tron", "etron", "q4 e-tron", "q6 e-tron"], "phevKeywords": ["tfsi e"], "hybridKeywords": [] },
+    { "id": "volkswagen", "label": "Volkswagen", "keywords": ["volkswagen", "vw"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["id.4", "id4", "id.buzz", "id buzz"], "phevKeywords": [], "hybridKeywords": [] },
+    { "id": "subaru", "label": "Subaru", "keywords": ["subaru"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["solterra"], "phevKeywords": ["crosstrek hybrid"], "hybridKeywords": ["hybrid"] },
+    { "id": "mazda", "label": "Mazda", "keywords": ["mazda"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["mx-30"], "phevKeywords": ["phev"], "hybridKeywords": ["hybrid"] },
+    { "id": "jeep", "label": "Jeep", "keywords": ["jeep"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["wagoneer s", "recon"], "phevKeywords": ["4xe"], "hybridKeywords": [] },
+    { "id": "chrysler", "label": "Chrysler", "keywords": ["chrysler"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": [], "phevKeywords": ["pacifica hybrid", "plug-in"], "hybridKeywords": [] },
+    { "id": "dodge", "label": "Dodge", "keywords": ["dodge", "ram"], "segmentTier": "mainstream", "defaultPowertrain": "gas", "evKeywords": ["daytona", "ramcharger"], "phevKeywords": ["ramcharger"], "hybridKeywords": [] },
+    { "id": "volvo", "label": "Volvo", "keywords": ["volvo"], "segmentTier": "premium", "defaultPowertrain": "gas", "evKeywords": ["c40", "ex30", "ex90", "xc40 recharge"], "phevKeywords": ["recharge"], "hybridKeywords": [] },
+    { "id": "porsche", "label": "Porsche", "keywords": ["porsche"], "segmentTier": "luxury", "defaultPowertrain": "gas", "evKeywords": ["taycan", "macan electric"], "phevKeywords": ["e-hybrid"], "hybridKeywords": [] }
+  ]
+}

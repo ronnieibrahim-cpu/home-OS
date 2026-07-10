@@ -181,3 +181,68 @@ ADR-001, not before.
 **Known limitation:** subtype matching is a best-effort keyword guess against the asset name; it
 can be wrong (hence the always-visible "not right? pick one" control) and only covers the
 system/appliance/vehicle categories the pack has data for.
+
+---
+
+## ADR-011 — Budget & Forecast as computed views; home-purchase scenario in the URL
+
+**Context:** The household is 6–18 months from buying a home and wants (a) a true current monthly
+budget, (b) a 24-month forward forecast including lumpy maintenance and predicted replacements, and
+(c) a home-purchase scenario (PITI, total ownership cost, current-vs-post-purchase comparison) with
+price and rate sliders to explore sensitivity. This is Phase-3 scenario modeling, explicitly
+requested by the owner. Everything must be deterministic local math — no external APIs — matching
+the knowledge-pack philosophy (ADR-010).
+
+**Decision:** Ship a `/budget` screen with three views and **no schema change**. All numbers are
+computed from the existing `recurring_expenses`, `maintenance_schedules`, `expenses`, and `assets`
+tables plus the knowledge pack, in pure modules under `src/lib/budget/`
+(`mortgage.ts`, `current-budget.ts`, `forecast.ts`). The current budget blends, per category,
+committed recurring + amortized maintenance reserve + the trailing-12-month average of actual
+expenses that are neither tied to a commitment nor maintenance/repair — so nothing is
+double-counted. The forecast walks each active schedule (via `advanceDate`) and places predicted
+replacements (via `estimateReplacement`) into the month they fall. The home-purchase scenario is a
+standard amortization calculator (PITI, PMI when down payment < 20%, cash-to-close, maintenance
+reserve) whose inputs live **only in the URL query string** — bookmarkable, shareable, reload-safe,
+and recomputed client-side on every slider move for instant feedback. Confirmed with the owner
+(dedicated nav tab; live/URL-based scenarios; the committed+reserve+extras blend).
+
+**Why:** Keeping the feature inside existing tables means zero migration and no new source of truth
+to keep in sync. Client-side recompute of pure math gives the iPhone-instant slider feel the
+product calls for without any server round-trip. URL-held inputs make rate/price sensitivity easy
+to explore and share without building a scenarios table we don't yet need.
+
+**Known limitations:** the forecast assumes today's commitments continue (respecting start/end
+dates) and does not model inflation or future new commitments beyond scheduled maintenance and
+predicted replacements; property-tax rate and insurance in the scenario are national-ballpark
+placeholders, flagged in the UI to be replaced with the household's county rate and a real quote;
+scenarios are not saved by name (URL only).
+
+---
+
+## ADR-012 — Make/model/powertrain-aware vehicle knowledge
+
+**Context:** The ADR-010 pack treated every vehicle identically — it suggested an oil change for a
+Tesla and keyed replacement cost / residual value only to body style. The owner asked for
+suggestions, cost, and residual value specific to the make and model ("my Tesla should not need an
+oil change").
+
+**Decision:** Add a **powertrain** axis (`gas`/`hybrid`/`phev`/`electric`) and a **brand-segment
+tier** (economy/mainstream/premium/luxury) to the vehicle knowledge, still with **no schema
+change**. Powertrain is guessed deterministically by keyword-matching the asset's
+`manufacturer` + `model_number` + `name` against a new `data/vehicle-makes.json` table (Tesla →
+electric, Prius → hybrid, RAV4 Prime / Volt / Jeep 4xe → plug-in hybrid, Bolt / Leaf / Mach-E /
+Rivian → electric, …), overridable via a `details.powertrain` key. Maintenance is now keyed by
+powertrain (`vehicle_gas` / `vehicle_hybrid` / `vehicle_electric`): EVs get no oil change and
+instead get tire rotation, cabin filter, brake-fluid, 12V-battery, and HV-battery-coolant tasks;
+PHEVs share the hybrid schedule (they still have an engine). Replacement cost is the body-style
+band scaled by the make's tier multiplier, and electric vehicles use their own steeper
+depreciation curve. All values remain editable estimates.
+
+**Why:** Delivers make/model-specific maintenance, cost, and residual value while staying entirely
+inside Phase 1's tables and the existing `assets.details` convention — no migration. Keyword
+matching mirrors the existing subtype guesser, so it degrades gracefully (unknown make → mainstream
+tier + gas) and is always user-overridable.
+
+**Known limitation:** the make/model table is a curated keyword list of common U.S. makes, not an
+exhaustive VIN database; per-model cost tables are out of scope. An unrecognized make falls back to
+body-style defaults and a gas powertrain, correctable with one tap.

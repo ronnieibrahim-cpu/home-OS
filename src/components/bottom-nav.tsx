@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Armchair, Plus, Wallet } from "lucide-react";
+import { House, Armchair, Plus, Wallet, LineChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -10,6 +10,7 @@ const items = [
   { href: "/assets", label: "Assets", icon: Armchair },
   { href: "/assets/new", label: "Add", icon: Plus },
   { href: "/expenses", label: "Money", icon: Wallet },
+  { href: "/budget", label: "Budget", icon: LineChart },
 ];
 
 // Thumb-reachable navigation for iPhone; safe-area padding for the notch bar.

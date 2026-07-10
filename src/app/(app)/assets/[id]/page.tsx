@@ -10,7 +10,7 @@ import { ErrorBanner } from "@/components/error-banner";
 import { DeleteForm } from "@/components/delete-form";
 import { AttachmentUploader } from "@/components/attachment-uploader";
 import { MaintenanceManager } from "@/components/maintenance-manager";
-import { AssetKnowledgePanel } from "@/components/asset-knowledge-panel";
+import { AssetKnowledgePanel, type VehicleDisplay } from "@/components/asset-knowledge-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,8 @@ import {
   getMissingSuggestions,
   listSubtypes,
   matchSubtype,
+  vehicleProfile,
+  POWERTRAINS,
 } from "@/lib/knowledge/pack";
 import type { Asset, Attachment, MaintenanceSchedule } from "@/lib/types";
 
@@ -93,6 +95,23 @@ export default async function AssetDetailPage({
   const replacement = estimateReplacement(typedAsset);
   const currentValue = estimateCurrentValue(typedAsset);
 
+  const profile = vehicleProfile(typedAsset);
+  const powertrainNotes: Record<string, string> = {
+    electric: "no oil changes needed",
+    hybrid: "oil changes on the longer hybrid schedule",
+    phev: "plug-in hybrid — still has a gas engine, so it keeps oil changes",
+    gas: "",
+  };
+  const vehicle: VehicleDisplay | null = profile
+    ? {
+        powertrain: profile.powertrain,
+        label: POWERTRAINS.find((p) => p.id === profile.powertrain)?.label ?? profile.powertrain,
+        makeLabel: profile.make?.label ?? null,
+        overridden: profile.powertrainOverridden,
+        note: powertrainNotes[profile.powertrain] || null,
+      }
+    : null;
+
   return (
     <div>
       <PageHeader
@@ -127,13 +146,15 @@ export default async function AssetDetailPage({
         </CardContent>
       </Card>
 
-      {(subtypeOptions.length > 0 || replacement) && (
+      {(subtypeOptions.length > 0 || replacement || vehicle) && (
         <section className="mb-8">
           <h2 className="mb-2 text-base font-semibold">Estimates</h2>
           <AssetKnowledgePanel
             assetId={id}
             subtype={subtype}
             subtypeOptions={subtypeOptions}
+            vehicle={vehicle}
+            powertrainOptions={POWERTRAINS}
             suggestions={suggestions}
             dismissedKeys={dismissedKeys}
             replacement={replacement}
