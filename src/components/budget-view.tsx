@@ -373,13 +373,25 @@ function PurchaseScenarioPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Mirror the scenario into the URL so a price/rate combo stays bookmarkable —
+  // debounced and guarded. Dragging a slider fires many changes per second, and
+  // iOS Safari throws (and can crash the tab) if history.replaceState is called
+  // too often, so we write at most a few times a second and swallow any throttle
+  // error. React state, not the URL, is the source of truth.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try {
+        const qs = scenarioToQuery(s);
+        window.history.replaceState(null, "", qs ? `/budget?${qs}` : "/budget");
+      } catch {
+        /* Safari replaceState throttle — ignore, state already updated */
+      }
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [s]);
+
   function update(patch: Partial<Scenario>) {
-    setS((prev) => {
-      const next = { ...prev, ...patch };
-      const qs = scenarioToQuery(next);
-      window.history.replaceState(null, "", qs ? `/budget?${qs}` : "/budget");
-      return next;
-    });
+    setS((prev) => ({ ...prev, ...patch }));
   }
 
   const result = useMemo(() => computeScenario(s), [s]);
@@ -514,6 +526,8 @@ function PurchaseScenarioPanel({
 function SensitivityGrid({ scenario }: { scenario: Scenario }) {
   const priceSteps = [-0.1, -0.05, 0, 0.05, 0.1];
   const rateDeltas = [-1, -0.5, 0, 0.5, 1];
+  // Down-payment fraction held constant across the grid (guard price = 0).
+  const downRatio = scenario.priceCents > 0 ? scenario.downCents / scenario.priceCents : 0;
 
   return (
     <div>
@@ -544,7 +558,7 @@ function SensitivityGrid({ scenario }: { scenario: Scenario }) {
                       ...scenario,
                       priceCents: price,
                       // Keep the down-payment percentage constant across the grid.
-                      downCents: Math.round(price * (scenario.downCents / scenario.priceCents || 0)),
+                      downCents: Math.round(price * downRatio),
                       annualRatePct: rate,
                     });
                     const isCurrent = ps === 0 && rd === 0;
