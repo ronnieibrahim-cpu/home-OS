@@ -11,8 +11,8 @@
     { "id": "dryer", "label": "Clothes dryer", "assetCategory": "appliance", "keywords": ["dryer"] },
     { "id": "range_oven", "label": "Range / oven / stove", "assetCategory": "appliance", "keywords": ["range", "oven", "stove", "cooktop"] },
     { "id": "microwave", "label": "Microwave", "assetCategory": "appliance", "keywords": ["microwave"] },
-    { "id": "vehicle_truck", "label": "Pickup truck", "assetCategory": "vehicle", "keywords": ["truck", "pickup", "f-150", "f150", "silverado", "sierra", "ram 1500", "tacoma", "tundra", "ranger", "colorado"] },
-    { "id": "vehicle_suv", "label": "SUV / crossover", "assetCategory": "vehicle", "keywords": ["suv", "crossover", "explorer", "tahoe", "suburban", "highlander", "4runner", "cr-v", "crv", "rav4", "pilot", "traverse", "expedition", "wrangler", "grand cherokee"] },
+    { "id": "vehicle_truck", "label": "Pickup truck", "assetCategory": "vehicle", "keywords": ["truck", "pickup", "f-150", "f150", "silverado", "sierra", "ram 1500", "tacoma", "tundra", "ranger", "colorado", "cybertruck", "lightning"] },
+    { "id": "vehicle_suv", "label": "SUV / crossover", "assetCategory": "vehicle", "keywords": ["suv", "crossover", "explorer", "tahoe", "suburban", "highlander", "4runner", "cr-v", "crv", "rav4", "pilot", "traverse", "expedition", "wrangler", "grand cherokee", "model y", "model x", "mach-e", "ioniq 5", "id.4"] },
     { "id": "vehicle_minivan", "label": "Minivan", "assetCategory": "vehicle", "keywords": ["minivan", "van", "odyssey", "sienna", "pacifica", "carnival"] },
     { "id": "vehicle_sedan", "label": "Sedan / car", "assetCategory": "vehicle", "keywords": ["sedan", "car", "coupe", "hatchback"] }
   ]

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { Check, Trash2, Wrench } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { formatCents } from "@/lib/format";
 import { describeInterval, dueInfo, type DueTone } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import type { MaintenanceSchedule } from "@/lib/types";
+import type { EffectiveDue } from "@/lib/vehicles/mileage";
 
 const toneClasses: Record<DueTone, string> = {
   overdue: "text-destructive",
@@ -17,10 +19,23 @@ const toneClasses: Record<DueTone, string> = {
 // One maintenance schedule as a row: what/when/cost plus a "Done" button and an
 // optional delete. The mutating buttons are <form>s so React runs them inside a
 // transition — the parent's optimistic state updates the instant they're tapped.
+// When a vehicle schedule has a mileage-based cadence, the effective due date
+// is whichever of time or mileage comes first — shown clearly labeled after
+// the calendar-interval text.
+function dueReasonSuffix(dueOverride: EffectiveDue | undefined): string {
+  if (!dueOverride || dueOverride.mileageDueAt == null) return "";
+  const at = `~${dueOverride.mileageDueAt.toLocaleString()} mi`;
+  if (dueOverride.reason === "mileage") return ` · due by mileage (${at})`;
+  if (dueOverride.reason === "both") return ` · due by time & mileage (${at})`;
+  return ` · not due by mileage until ${at}`;
+}
+
 export function MaintenanceRow({
   schedule,
   assetName,
   assetHref,
+  vehicle,
+  dueOverride,
   doneAction,
   deleteAction,
   dimmed,
@@ -28,11 +43,13 @@ export function MaintenanceRow({
   schedule: MaintenanceSchedule;
   assetName?: string;
   assetHref?: string;
-  doneAction: () => Promise<void>;
+  vehicle?: boolean;
+  dueOverride?: EffectiveDue;
+  doneAction: (formData: FormData) => Promise<void>;
   deleteAction?: () => Promise<void>;
   dimmed?: boolean;
 }) {
-  const due = dueInfo(schedule.next_due_on);
+  const due = dueInfo(dueOverride?.dueOn ?? schedule.next_due_on);
 
   return (
     <div
@@ -58,9 +75,20 @@ export function MaintenanceRow({
           {schedule.estimated_cost_cents != null
             ? ` · ~${formatCents(schedule.estimated_cost_cents)}`
             : ""}
+          {dueReasonSuffix(dueOverride)}
         </p>
       </div>
-      <form action={doneAction}>
+      <form action={doneAction} className="flex items-center gap-2">
+        {vehicle && (
+          <Input
+            name="mileage"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            placeholder="Odometer"
+            className="h-9 w-24 text-sm"
+          />
+        )}
         <SubmitButton variant="outline" size="sm" className="h-9 px-3">
           <Check className="size-4" /> Done
         </SubmitButton>

@@ -1,0 +1,27 @@
+{
+  "_source": "Common major-appliance manufacturers sold in the U.S. (kitchen and laundry), used only to offer an offline manufacturer type-ahead and name-based prefill for the asset form — no ranking, market-share, or quality claim implied. Keywords cover the brand name and common short forms/sub-brands (e.g. GE also matches 'general electric' and 'ge profile').",
+  "manufacturers": [
+    { "id": "ge", "label": "GE", "keywords": ["ge", "general electric", "ge profile", "ge appliances", "cafe", "haier"] },
+    { "id": "whirlpool", "label": "Whirlpool", "keywords": ["whirlpool"] },
+    { "id": "lg", "label": "LG", "keywords": ["lg"] },
+    { "id": "samsung", "label": "Samsung", "keywords": ["samsung"] },
+    { "id": "kitchenaid", "label": "KitchenAid", "keywords": ["kitchenaid"] },
+    { "id": "maytag", "label": "Maytag", "keywords": ["maytag"] },
+    { "id": "bosch", "label": "Bosch", "keywords": ["bosch"] },
+    { "id": "frigidaire", "label": "Frigidaire", "keywords": ["frigidaire"] },
+    { "id": "kenmore", "label": "Kenmore", "keywords": ["kenmore"] },
+    { "id": "electrolux", "label": "Electrolux", "keywords": ["electrolux"] },
+    { "id": "amana", "label": "Amana", "keywords": ["amana"] },
+    { "id": "miele", "label": "Miele", "keywords": ["miele"] },
+    { "id": "viking", "label": "Viking", "keywords": ["viking"] },
+    { "id": "subzero", "label": "Sub-Zero", "keywords": ["sub-zero", "subzero", "sub zero"] },
+    { "id": "wolf", "label": "Wolf", "keywords": ["wolf"] },
+    { "id": "speedqueen", "label": "Speed Queen", "keywords": ["speed queen", "speedqueen"] },
+    { "id": "rheem", "label": "Rheem", "keywords": ["rheem"] },
+    { "id": "ao_smith", "label": "A. O. Smith", "keywords": ["a.o. smith", "ao smith", "a. o. smith"] },
+    { "id": "carrier", "label": "Carrier", "keywords": ["carrier"] },
+    { "id": "trane", "label": "Trane", "keywords": ["trane"] },
+    { "id": "lennox", "label": "Lennox", "keywords": ["lennox"] },
+    { "id": "goodman", "label": "Goodman", "keywords": ["goodman"] }
+  ]
+}

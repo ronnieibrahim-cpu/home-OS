@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ManufacturerInput } from "@/components/manufacturer-input";
 import { SubmitButton } from "@/components/submit-button";
 import { centsToDollarsInput } from "@/lib/format";
-import { ASSET_CATEGORIES, type Asset, type Home, type Room } from "@/lib/types";
+import { suggestFromName } from "@/lib/knowledge/autocomplete";
+import { ASSET_CATEGORIES, type Asset, type AssetCategory, type Home, type Room } from "@/lib/types";
 
 const selectClass =
   "h-12 w-full appearance-none rounded-md border border-input bg-transparent px-3 text-base shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring";
@@ -33,6 +37,28 @@ export function AssetForm({
   const [homeId, setHomeId] = useState(initialHome);
   const roomsForHome = rooms.filter((r) => r.home_id === homeId);
 
+  const [name, setName] = useState(asset?.name ?? "");
+  const [category, setCategory] = useState<AssetCategory>(asset?.category ?? "appliance");
+  const [manufacturer, setManufacturer] = useState(asset?.manufacturer ?? "");
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+
+  // Fully offline name-based prefill (see src/lib/knowledge/autocomplete.ts):
+  // "Tesla Model Y" -> vehicle/Tesla, "GE dishwasher" -> appliance/GE. Only
+  // offered when it would actually change something — never silently
+  // overwrites a category/manufacturer the household already set.
+  const suggestion = suggestFromName(name);
+  const suggestionApplies =
+    !suggestionDismissed &&
+    suggestion != null &&
+    (suggestion.category !== category || (suggestion.manufacturer && !manufacturer.trim()));
+
+  function applySuggestion() {
+    if (!suggestion) return;
+    setCategory(suggestion.category);
+    if (suggestion.manufacturer && !manufacturer.trim()) setManufacturer(suggestion.manufacturer);
+    setSuggestionDismissed(true);
+  }
+
   return (
     <form action={action} className="flex flex-col gap-4">
       <div className="grid gap-2">
@@ -41,10 +67,39 @@ export function AssetForm({
           id="name"
           name="name"
           required
-          defaultValue={asset?.name ?? ""}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setSuggestionDismissed(false);
+          }}
           placeholder="LG Refrigerator"
           className="h-12 text-base"
         />
+        {suggestionApplies && suggestion && (
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-accent px-3 py-2 text-xs text-accent-foreground">
+            <Sparkles className="size-3.5 shrink-0" />
+            Looks like a {suggestion.subtypeLabel.toLowerCase()}
+            {suggestion.manufacturer ? ` (${suggestion.manufacturer})` : ""} — use category{" "}
+            <span className="font-medium capitalize">{suggestion.category}</span>
+            {suggestion.manufacturer && !manufacturer.trim() ? " and fill in manufacturer" : ""}?
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="ml-1 h-6 px-2 text-xs"
+              onClick={applySuggestion}
+            >
+              Apply
+            </Button>
+            <button
+              type="button"
+              onClick={() => setSuggestionDismissed(true)}
+              className="underline-offset-2 hover:underline"
+            >
+              Dismiss
+            </button>
+          </p>
+        )}
       </div>
 
       <div className="grid gap-2">
@@ -52,7 +107,8 @@ export function AssetForm({
         <select
           id="category"
           name="category"
-          defaultValue={asset?.category ?? "appliance"}
+          value={category}
+          onChange={(e) => setCategory(e.target.value as AssetCategory)}
           className={selectClass}
         >
           {ASSET_CATEGORIES.map((c) => (
@@ -101,11 +157,12 @@ export function AssetForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-2">
           <Label htmlFor="manufacturer">Manufacturer</Label>
-          <Input
+          <ManufacturerInput
             id="manufacturer"
             name="manufacturer"
-            defaultValue={asset?.manufacturer ?? ""}
-            className="h-12 text-base"
+            value={manufacturer}
+            onChange={setManufacturer}
+            category={category}
           />
         </div>
         <div className="grid gap-2">

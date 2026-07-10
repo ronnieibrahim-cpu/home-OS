@@ -6,8 +6,8 @@ import { Check, Pencil, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
-import { formatCents } from "@/lib/format";
-import { describeInterval } from "@/lib/schedule";
+import { formatCents, formatDate } from "@/lib/format";
+import { describeInterval, todayISO } from "@/lib/schedule";
 import { acceptMaintenanceSuggestion } from "@/lib/actions/maintenance";
 import { dismissMaintenanceSuggestion, updateAssetKnowledgeDetails } from "@/lib/actions/assets";
 import type {
@@ -27,6 +27,15 @@ export type VehicleDisplay = {
   note: string | null;
 };
 
+// Display data for the one-tap mileage tracker (ADR-014), also prepared
+// server-side.
+export type VehicleMileageDisplay = {
+  currentMileage: number | null;
+  asOfDate: string | null;
+  milesPerYear: number | null;
+  milesPerYearMethod: "readings" | "since_purchase" | "national_average" | null;
+};
+
 // Shown on the asset detail page: knowledge-pack maintenance suggestions
 // (one-tap accept/dismiss) and an estimated replacement year/cost, both
 // clearly labeled as editable estimates — see docs/decisions.md ADR-010.
@@ -40,6 +49,7 @@ export function AssetKnowledgePanel({
   dismissedKeys,
   replacement,
   currentValue,
+  vehicleMileage,
 }: {
   assetId: string;
   subtype: Subtype | null;
@@ -50,6 +60,7 @@ export function AssetKnowledgePanel({
   dismissedKeys: string[];
   replacement: ReplacementEstimate | null;
   currentValue: CurrentValueEstimate | null;
+  vehicleMileage?: VehicleMileageDisplay | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +103,14 @@ export function AssetKnowledgePanel({
           assetId={assetId}
           vehicle={vehicle}
           options={powertrainOptions}
+          onChanged={() => router.refresh()}
+        />
+      )}
+
+      {vehicle && vehicleMileage && (
+        <VehicleMileageCard
+          assetId={assetId}
+          mileage={vehicleMileage}
           onChanged={() => router.refresh()}
         />
       )}
@@ -274,6 +293,104 @@ function PowertrainPicker({
       <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
         Cancel
       </Button>
+    </div>
+  );
+}
+
+const milesPerYearMethodLabel: Record<
+  NonNullable<VehicleMileageDisplay["milesPerYearMethod"]>,
+  string
+> = {
+  readings: "from your mileage history",
+  since_purchase: "since purchase — logs a second reading to refine this",
+  national_average: "national average — no mileage history yet",
+};
+
+// One-tap odometer update (ADR-014): shows the latest known mileage + as-of
+// date and the estimated miles/year behind mileage-based due dates, editable
+// inline like the powertrain/subtype pickers above.
+function VehicleMileageCard({
+  assetId,
+  mileage,
+  onChanged,
+}: {
+  assetId: string;
+  mileage: VehicleMileageDisplay;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function save(formData: FormData) {
+    const raw = String(formData.get("mileage") ?? "").trim();
+    const value = parseInt(raw, 10);
+    if (!raw || !Number.isFinite(value) || value < 0) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    await updateAssetKnowledgeDetails(assetId, {
+      current_mileage: value,
+      current_mileage_asof: todayISO(),
+    });
+    setSaving(false);
+    setEditing(false);
+    onChanged();
+  }
+
+  return (
+    <div className="rounded-md border p-4">
+      <div className="mb-1 flex items-center justify-between">
+        <p className="text-sm font-medium">Mileage</p>
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
+          >
+            <Pencil className="size-3" /> Update mileage
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <form action={save} className="mt-2 flex items-center gap-2">
+          <Input
+            name="mileage"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            autoFocus
+            defaultValue={mileage.currentMileage ?? undefined}
+            placeholder="Odometer (mi)"
+            className="h-10 text-sm"
+          />
+          <SubmitButton size="sm" className="h-9 shrink-0">
+            Save
+          </SubmitButton>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={saving}
+            onClick={() => setEditing(false)}
+          >
+            Cancel
+          </Button>
+        </form>
+      ) : (
+        <>
+          <p className="text-lg font-semibold tabular-nums">
+            {mileage.currentMileage != null ? `${mileage.currentMileage.toLocaleString()} mi` : "—"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {mileage.asOfDate ? `As of ${formatDate(mileage.asOfDate)}` : "No reading yet"}
+            {mileage.milesPerYear != null && mileage.milesPerYearMethod
+              ? ` · ~${Math.round(mileage.milesPerYear).toLocaleString()} mi/year (${milesPerYearMethodLabel[mileage.milesPerYearMethod]})`
+              : ""}
+          </p>
+        </>
+      )}
     </div>
   );
 }

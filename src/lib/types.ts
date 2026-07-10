@@ -106,9 +106,24 @@ export type MaintenanceSchedule = {
   description: string | null;
   interval_value: number;
   interval_unit: MaintenanceIntervalUnit;
+  // Optional mileage-based cadence (vehicles only); NULL = calendar-only.
+  // See docs/decisions.md ADR-014.
+  interval_miles: number | null;
   next_due_on: string | null;
   estimated_cost_cents: number | null;
   is_active: boolean;
+};
+
+export type MaintenanceLog = {
+  id: string;
+  asset_id: string;
+  schedule_id: string | null;
+  completed_on: string;
+  // Odometer reading at time of service (vehicles only). ADR-014.
+  mileage: number | null;
+  cost_cents: number | null;
+  performed_by: string | null;
+  expense_id: string | null;
 };
 
 export type RecurringExpense = {

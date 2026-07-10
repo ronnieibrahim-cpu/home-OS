@@ -10,7 +10,11 @@ import { ErrorBanner } from "@/components/error-banner";
 import { DeleteForm } from "@/components/delete-form";
 import { AttachmentUploader } from "@/components/attachment-uploader";
 import { MaintenanceManager } from "@/components/maintenance-manager";
-import { AssetKnowledgePanel, type VehicleDisplay } from "@/components/asset-knowledge-panel";
+import {
+  AssetKnowledgePanel,
+  type VehicleDisplay,
+  type VehicleMileageDisplay,
+} from "@/components/asset-knowledge-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,8 +26,10 @@ import {
   matchSubtype,
   vehicleProfile,
   POWERTRAINS,
+  type AssetKnowledgeDetails,
 } from "@/lib/knowledge/pack";
-import type { Asset, Attachment, MaintenanceSchedule } from "@/lib/types";
+import { estimateMilesPerYear, effectiveDueDate, type EffectiveDue } from "@/lib/vehicles/mileage";
+import type { Asset, Attachment, MaintenanceLog, MaintenanceSchedule } from "@/lib/types";
 
 type AssetJoined = Asset & {
   homes: { name: string } | null;
@@ -41,7 +47,7 @@ export default async function AssetDetailPage({
   const { error } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: asset }, { data: attachments }, { data: schedules }] =
+  const [{ data: asset }, { data: attachments }, { data: schedules }, { data: logs }] =
     await Promise.all([
       supabase
         .from("assets")
@@ -59,12 +65,18 @@ export default async function AssetDetailPage({
         .select("*")
         .eq("asset_id", id)
         .order("next_due_on", { ascending: true, nullsFirst: false }),
+      supabase
+        .from("maintenance_logs")
+        .select("*")
+        .eq("asset_id", id)
+        .order("completed_on", { ascending: true }),
     ]);
 
   if (!asset) notFound();
   const typedAsset = asset as AssetJoined;
   const attachmentList = (attachments ?? []) as Attachment[];
   const scheduleList = (schedules ?? []) as MaintenanceSchedule[];
+  const logList = (logs ?? []) as MaintenanceLog[];
 
   // Private bucket -> short-lived signed URLs for display.
   const signedUrls = new Map<string, string>();
@@ -111,6 +123,47 @@ export default async function AssetDetailPage({
         note: powertrainNotes[profile.powertrain] || null,
       }
     : null;
+
+  // Mileage-aware due dates (vehicles only, ADR-014): estimate miles/year from
+  // every known reading, then project each mileage-based schedule's due date
+  // and take the earlier of that or the calendar date.
+  const knowledgeDetails = (typedAsset.details ?? {}) as AssetKnowledgeDetails;
+  const currentMileage = knowledgeDetails.current_mileage ?? null;
+  const currentMileageAsOf = knowledgeDetails.current_mileage_asof ?? null;
+  let vehicleMileage: VehicleMileageDisplay | null = null;
+  const dueOverrides: Record<string, EffectiveDue> = {};
+
+  if (vehicle) {
+    const milesPerYear = estimateMilesPerYear({
+      purchaseDate: typedAsset.purchase_date,
+      currentMileage,
+      currentMileageAsOf,
+      logReadings: logList
+        .filter((l): l is MaintenanceLog & { mileage: number } => l.mileage != null)
+        .map((l) => ({ date: l.completed_on, mileage: l.mileage })),
+    });
+    vehicleMileage = {
+      currentMileage,
+      asOfDate: currentMileageAsOf,
+      milesPerYear: milesPerYear.milesPerYear,
+      milesPerYearMethod: milesPerYear.method,
+    };
+
+    for (const schedule of scheduleList) {
+      if (schedule.interval_miles == null) continue;
+      const lastLogForSchedule = [...logList]
+        .reverse()
+        .find((l) => l.schedule_id === schedule.id && l.mileage != null);
+      dueOverrides[schedule.id] = effectiveDueDate({
+        timeDueOn: schedule.next_due_on,
+        intervalMiles: schedule.interval_miles,
+        lastServiceMileage: lastLogForSchedule?.mileage ?? null,
+        currentMileage,
+        currentMileageAsOf,
+        milesPerYear: milesPerYear.milesPerYear,
+      });
+    }
+  }
 
   return (
     <div>
@@ -159,13 +212,19 @@ export default async function AssetDetailPage({
             dismissedKeys={dismissedKeys}
             replacement={replacement}
             currentValue={currentValue}
+            vehicleMileage={vehicleMileage}
           />
         </section>
       )}
 
       <section className="mb-8">
         <h2 className="mb-2 text-base font-semibold">Maintenance</h2>
-        <MaintenanceManager assetId={id} initial={scheduleList} />
+        <MaintenanceManager
+          assetId={id}
+          initial={scheduleList}
+          isVehicle={vehicle != null}
+          dueOverrides={dueOverrides}
+        />
       </section>
 
       <section className="mb-8">

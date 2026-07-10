@@ -17,6 +17,7 @@ import maintenanceData from "./data/maintenance-schedules.json";
 import lifespansData from "./data/lifespans.json";
 import depreciationData from "./data/depreciation-curves.json";
 import vehicleMakesData from "./data/vehicle-makes.json";
+import manufacturersData from "./data/manufacturers.json";
 import type { Asset, AssetCategory, MaintenanceIntervalUnit } from "@/lib/types";
 
 export type SubtypeId = (typeof subtypesData.subtypes)[number]["id"];
@@ -39,6 +40,11 @@ export type AssetKnowledgeDetails = {
   // guess. Drives which maintenance schedule and depreciation curve apply
   // (an electric car gets no oil change). See ADR-012.
   powertrain?: Powertrain;
+  // Vehicles only: the latest known odometer reading and the date it was
+  // taken. Feeds the miles/year estimate and mileage-based due dates
+  // (src/lib/vehicles/mileage.ts). See ADR-014.
+  current_mileage?: number;
+  current_mileage_asof?: string;
 };
 
 function knowledgeDetails(asset: Pick<Asset, "details">): AssetKnowledgeDetails {
@@ -76,6 +82,24 @@ export function matchSubtype(asset: Pick<Asset, "name" | "category" | "details">
 
 export function listSubtypes(): Subtype[] {
   return SUBTYPES;
+}
+
+// Exposed for the offline autocomplete (src/lib/knowledge/autocomplete.ts) —
+// vehicle makes with their matching keywords, reused rather than duplicated.
+export function listVehicleMakes(): { label: string; keywords: string[] }[] {
+  return MAKES.map((m) => ({ label: m.label, keywords: m.keywords }));
+}
+
+const MANUFACTURERS = manufacturersData.manufacturers as {
+  id: string;
+  label: string;
+  keywords: string[];
+}[];
+
+// Non-vehicle manufacturers (appliances, HVAC, water heaters) for the same
+// offline autocomplete.
+export function listApplianceManufacturers(): { label: string; keywords: string[] }[] {
+  return MANUFACTURERS.map((m) => ({ label: m.label, keywords: m.keywords }));
 }
 
 // --- Vehicle make / powertrain ----------------------------------------------
@@ -178,6 +202,10 @@ type RawScheduleEntry = {
   task: string;
   intervalValue: number;
   intervalUnit: MaintenanceIntervalUnit;
+  // Vehicles only: a mileage-based cadence alongside the calendar one, for
+  // tasks with a well-established mileage interval (ADR-014). Absent = the
+  // task is calendar-only.
+  intervalMiles?: number;
   costLowCents: number;
   costHighCents: number;
   description?: string;
@@ -206,6 +234,7 @@ export type SuggestedSchedule = {
   description: string | null;
   intervalValue: number;
   intervalUnit: MaintenanceIntervalUnit;
+  intervalMiles: number | null;
   estimatedCostLowCents: number;
   estimatedCostHighCents: number;
   estimatedCostMidCents: number;
@@ -230,6 +259,7 @@ export function getPackSchedules(
     description: e.description ?? null,
     intervalValue: e.intervalValue,
     intervalUnit: e.intervalUnit,
+    intervalMiles: e.intervalMiles ?? null,
     estimatedCostLowCents: e.costLowCents,
     estimatedCostHighCents: e.costHighCents,
     estimatedCostMidCents: Math.round((e.costLowCents + e.costHighCents) / 2),

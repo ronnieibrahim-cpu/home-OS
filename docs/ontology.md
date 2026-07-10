@@ -129,7 +129,7 @@ Two deliberate decisions (see `docs/decisions.md` for the full reasoning):
 | `manufacturer`, `model_number`, `serial_number` | text | optional |
 | `purchase_date` | date | optional |
 | `purchase_price_cents` | bigint | optional |
-| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}`. The maintenance knowledge pack (`src/lib/knowledge/`, ADR-010) also writes `subtype`, `dismissed_suggestions`, `replacement_year_override`, and `replacement_cost_cents_override` here — conventional keys, not schema. For vehicles, the make/model-aware retool (ADR-012) adds a `powertrain` key (`gas`/`hybrid`/`phev`/`electric`) overriding the guessed value — so an EV gets no oil change. |
+| `details` | jsonb | optional free-form facts, e.g. `{"vin": "…", "mileage": 42000}`. The maintenance knowledge pack (`src/lib/knowledge/`, ADR-010) also writes `subtype`, `dismissed_suggestions`, `replacement_year_override`, and `replacement_cost_cents_override` here — conventional keys, not schema. For vehicles, the make/model-aware retool (ADR-012) adds a `powertrain` key (`gas`/`hybrid`/`phev`/`electric`) overriding the guessed value — so an EV gets no oil change. Mileage-aware maintenance (ADR-014) adds two more vehicle-only keys: `current_mileage` (int, the latest known odometer reading) and `current_mileage_asof` (date, when that reading was taken) — kept in `details` rather than promoted to columns because they're still vehicle-specific facts, same reasoning as `powertrain`. |
 | `status` | text | `active` (default) or `disposed` — sold/trashed assets keep their history instead of being deleted |
 
 ---
@@ -146,7 +146,8 @@ A recurring upkeep obligation on an asset: "replace HVAC filter every 3 months",
 | `name` | text | required, e.g. "Replace air filter" |
 | `description` | text | optional (filter size, how-to, etc.) |
 | `interval_value` + `interval_unit` | int + text | e.g. `3` + `month`. Units: `day`, `week`, `month`, `year` |
-| `next_due_on` | date | when it's next due. Phase 1: the app updates this when a log is recorded; the database doesn't do it automatically. |
+| `interval_miles` | int | optional; a mileage-based cadence for vehicles (e.g. `5000` for "every 5,000 miles"), alongside the calendar cadence above. NULL means calendar-only (ADR-014). When both are set, the app treats the schedule as due whichever comes first — see `src/lib/vehicles/mileage.ts`. |
+| `next_due_on` | date | when it's next due **by calendar**. Phase 1: the app updates this when a log is recorded; the database doesn't do it automatically. The mileage-based due date is *derived*, never stored — projected from the vehicle's estimated miles/year (ADR-014). |
 | `estimated_cost_cents` | bigint | optional; lets the dashboard forecast maintenance cost before any money is spent |
 | `is_active` | boolean | pause a schedule without deleting its history |
 
@@ -162,6 +163,7 @@ lives *only* in the expenses table — the log points at it — so spending is n
 | `asset_id` | → assets | required |
 | `schedule_id` | → maintenance_schedules | optional; deleting a schedule keeps the logs (history survives) |
 | `completed_on` | date | required |
+| `mileage` | int | optional; the odometer reading at time of service (vehicles). Feeds the miles/year estimate used to project mileage-based due dates (ADR-014) — also the household's most accurate mileage reading, since it's captured at a real event rather than a manual update. |
 | `cost_cents` | bigint | optional convenience copy for display; the authoritative money record is the linked expense |
 | `performed_by` | text | optional free text, e.g. "ABC Plumbing", "me" (Vendors become a real entity in a later phase) |
 | `expense_id` | → expenses | optional, one-to-one; the expense this service created |

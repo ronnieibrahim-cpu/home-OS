@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dollarsToCents, textOrNull } from "@/lib/format";
 import { advanceDate, todayISO } from "@/lib/schedule";
 import { MAINTENANCE_INTERVAL_UNITS } from "@/lib/types";
-import type { SuggestedSchedule } from "@/lib/knowledge/pack";
+import type { AssetKnowledgeDetails, SuggestedSchedule } from "@/lib/knowledge/pack";
 
 // These actions revalidate (not redirect) and return a plain result object, so
 // the optimistic client components can update the screen on tap and reconcile
@@ -48,8 +48,15 @@ export async function createMaintenanceSchedule(
 }
 
 // Record that the work happened today: append a service log and push the
-// schedule's next due date forward by one interval from today.
-export async function markMaintenanceDone(scheduleId: string): Promise<Result> {
+// schedule's next due date forward by one interval from today. An optional
+// odometer reading (vehicles) is stored on the log and, if it's newer/higher
+// than what's on file, also bumps the asset's tracked current mileage — a
+// reading captured at a real service is more trustworthy than a manually
+// typed one (see docs/decisions.md ADR-014).
+export async function markMaintenanceDone(
+  scheduleId: string,
+  mileage?: number | null
+): Promise<Result> {
   const supabase = await createClient();
 
   const { data: schedule, error: readError } = await supabase
@@ -65,6 +72,7 @@ export async function markMaintenanceDone(scheduleId: string): Promise<Result> {
     asset_id: schedule.asset_id,
     schedule_id: scheduleId,
     completed_on: today,
+    mileage: mileage ?? null,
   });
   if (logError) return { error: logError.message };
 
@@ -74,6 +82,21 @@ export async function markMaintenanceDone(scheduleId: string): Promise<Result> {
     .update({ next_due_on: nextDue })
     .eq("id", scheduleId);
   if (updateError) return { error: updateError.message };
+
+  if (mileage != null) {
+    const { data: asset } = await supabase
+      .from("assets")
+      .select("details")
+      .eq("id", schedule.asset_id)
+      .maybeSingle();
+    const details = (asset?.details ?? {}) as AssetKnowledgeDetails;
+    if (details.current_mileage == null || mileage > details.current_mileage) {
+      await supabase
+        .from("assets")
+        .update({ details: { ...details, current_mileage: mileage, current_mileage_asof: today } })
+        .eq("id", schedule.asset_id);
+    }
+  }
 
   revalidatePath(`/assets/${schedule.asset_id}`);
   revalidatePath("/");
@@ -93,6 +116,7 @@ export async function acceptMaintenanceSuggestion(
     description: suggestion.description,
     interval_value: suggestion.intervalValue,
     interval_unit: suggestion.intervalUnit,
+    interval_miles: suggestion.intervalMiles,
     next_due_on: advanceDate(todayISO(), suggestion.intervalValue, suggestion.intervalUnit),
     estimated_cost_cents: suggestion.estimatedCostMidCents,
     is_active: true,
@@ -118,6 +142,7 @@ export async function acceptMaintenanceSuggestionsBulk(
     description: suggestion.description,
     interval_value: suggestion.intervalValue,
     interval_unit: suggestion.intervalUnit,
+    interval_miles: suggestion.intervalMiles,
     next_due_on: advanceDate(today, suggestion.intervalValue, suggestion.intervalUnit),
     estimated_cost_cents: suggestion.estimatedCostMidCents,
     is_active: true,

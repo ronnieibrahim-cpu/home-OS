@@ -269,3 +269,67 @@ environment, including the live project (a re-grant is a no-op there).
 covered the second. Making the first explicit in a migration — rather than leaning on a
 CLI config flag Supabase has already marked for removal — keeps local dev, CI, and the live
 project's effective permissions identical and durable past that flag's removal date.
+
+---
+
+## ADR-014 — Mileage-aware vehicle maintenance: two columns, current odometer stays in `details`
+
+**Context:** `maintenance_schedules` (ADR-010/ontology.md) is calendar-based only — "every 6 months"
+— which is wrong for a car: a low-mileage driver over-services, a high-mileage driver under-services.
+The owner asked for mileage-based cadences (oil change every 5,000 mi) alongside the existing
+calendar cadence, with due date being whichever comes first.
+
+**Decision:** Two small additive columns, both optional and both meaningless outside vehicles:
+`maintenance_schedules.interval_miles` (the mileage cadence) and `maintenance_logs.mileage` (the
+odometer reading at time of service — also the household's single most reliable mileage data
+point, since it's captured at a real event). These earn real columns, unlike `assets.details`
+free-form facts, because they participate in a join/comparison the app runs on every page load
+(every schedule × its logs) and because a `CHECK (interval_miles > 0)` / `CHECK (mileage >= 0)`
+is worth having at the database level.
+
+The vehicle's **current odometer reading** (`current_mileage` + its `current_mileage_asof` date),
+by contrast, stays in `assets.details` as a conventional key pair — exactly like `powertrain`
+(ADR-012): it's a single vehicle-specific fact with no query/join burden, so ADR-001's "promote to
+a column only when it earns it" bar isn't met.
+
+**Miles/year estimate** (`src/lib/vehicles/mileage.ts`, pure + unit-tested like `src/lib/budget/`):
+collect every known (date, mileage) point — each `maintenance_logs.mileage` reading plus the
+asset's own `current_mileage`/`current_mileage_asof` — and take the secant slope between the
+earliest and latest point. With only one point, fall back to the slope since `purchase_date`
+(treating purchase as a zero-mileage start — an approximation, clearly labeled, that's wrong for a
+used car bought with existing mileage but improves the moment a second reading exists). With zero
+points, fall back to the FHWA's commonly-cited ~13,500 mi/year U.S. average (already the citation
+basis for `maintenance-schedules.json`). The method used (`readings` / `since_purchase` /
+`national_average`) is always surfaced, never silently assumed.
+
+**Due date = earlier of time or mileage:** for a schedule with `interval_miles` set, project the
+calendar date the vehicle will reach `last-service-mileage + interval_miles` (falling back to
+current mileage as the baseline if the schedule has never been serviced with a mileage reading
+attached) using the miles/year estimate, then compare to the existing calendar `next_due_on`. The
+earlier date wins and the UI labels which rule triggered it ("by mileage" / "by time"). The
+mileage-based date is always *derived*, never stored — consistent with `next_due_on` already being
+the only stored due date.
+
+**Knowledge pack:** added `intervalMiles` only to the vehicle tasks with a well-established,
+widely-cited mileage interval (oil change: 5,000 mi conventional / 10,000 mi hybrid-synthetic; tire
+rotation: 6,000 mi) — the same sources already cited in `maintenance-schedules.json`'s `_source`.
+Tasks without a standard mileage figure (brake fluid service, HV battery coolant, state inspection)
+stay calendar-only rather than inventing a number.
+
+**UI:** a one-tap "update mileage" card on vehicle asset pages (same inline-edit pattern as the
+existing subtype/powertrain pickers) writes `details.current_mileage` directly. An optional
+mileage field on the maintenance "Done" action writes `maintenance_logs.mileage` and — since a
+fresh odometer reading from a real service is more trustworthy than a manually-typed one — also
+bumps `details.current_mileage` when it's newer/higher than what's stored, so logging maintenance
+alone keeps the estimate current without a separate step.
+
+**Why:** Keeps the two real facts that need to be queried/compared as real columns (with real
+constraints) while keeping the single vehicle-specific "current odometer" fact in `details`,
+per ADR-001/ADR-012's existing convention — no wholesale schema change, no new source of truth.
+
+**Known limitations:** the `/budget` 24-month forecast (ADR-011) still walks schedules by calendar
+interval only; mileage-aware due dates surface on the vehicle asset page, not yet folded into the
+forecast. The since-purchase fallback assumes zero miles at purchase, which undercounts a used
+car's true annual mileage until a second reading exists. `interval_miles` is populated by accepting
+a knowledge-pack suggestion; there's no manual "every N miles" input on the custom-schedule form
+yet.

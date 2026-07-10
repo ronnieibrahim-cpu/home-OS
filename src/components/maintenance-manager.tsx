@@ -14,6 +14,7 @@ import {
 } from "@/lib/actions/maintenance";
 import { advanceDate, todayISO } from "@/lib/schedule";
 import { MAINTENANCE_INTERVAL_UNITS, type MaintenanceSchedule } from "@/lib/types";
+import type { EffectiveDue } from "@/lib/vehicles/mileage";
 
 const selectClass =
   "h-12 w-full appearance-none rounded-md border border-input bg-transparent px-3 text-base shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring";
@@ -28,9 +29,13 @@ type OptAction =
 export function MaintenanceManager({
   assetId,
   initial,
+  isVehicle = false,
+  dueOverrides = {},
 }: {
   assetId: string;
   initial: MaintenanceSchedule[];
+  isVehicle?: boolean;
+  dueOverrides?: Record<string, EffectiveDue>;
 }) {
   const [schedules, applyOptimistic] = useOptimistic(
     initial,
@@ -73,6 +78,7 @@ export function MaintenanceManager({
         description: null,
         interval_value: intervalValue,
         interval_unit: unit,
+        interval_miles: null,
         next_due_on: String(formData.get("next_due_on") ?? "") || null,
         estimated_cost_cents: est !== null && Number.isFinite(est) ? est : null,
         is_active: true,
@@ -90,14 +96,18 @@ export function MaintenanceManager({
   }
 
   function doneAction(schedule: MaintenanceSchedule) {
-    return async () => {
+    return async (formData: FormData) => {
+      const mileageRaw = String(formData.get("mileage") ?? "").trim();
+      const mileageValue = mileageRaw === "" ? null : parseInt(mileageRaw, 10);
+      const mileage = mileageValue != null && Number.isFinite(mileageValue) ? mileageValue : null;
+
       const nextDue = advanceDate(
         todayISO(),
         schedule.interval_value,
         schedule.interval_unit
       );
       applyOptimistic({ kind: "done", id: schedule.id, nextDue });
-      const res = await markMaintenanceDone(schedule.id);
+      const res = await markMaintenanceDone(schedule.id, mileage);
       if (res?.error) setError(res.error);
     };
   }
@@ -129,6 +139,8 @@ export function MaintenanceManager({
             <MaintenanceRow
               key={s.id}
               schedule={s}
+              vehicle={isVehicle}
+              dueOverride={dueOverrides[s.id]}
               doneAction={doneAction(s)}
               deleteAction={deleteAction(s.id)}
             />
