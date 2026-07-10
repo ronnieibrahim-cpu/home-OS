@@ -15,12 +15,25 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Household OS",
   description: "The second brain for running our household",
+  manifest: "/manifest.webmanifest",
+  // Launch full-screen (no Safari chrome) when added to the iPhone home screen.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Household",
+  },
+  // Next emits the modern `mobile-web-app-capable`, but iOS Safari still needs
+  // the legacy `apple-mobile-web-app-capable` to launch standalone. Force it.
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
