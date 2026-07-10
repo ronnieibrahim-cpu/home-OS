@@ -32,7 +32,7 @@ You need a free Supabase project and about 10 minutes.
 
 ### 2. Run the database migrations
 
-In the Supabase dashboard, open **SQL Editor** and run the five files in
+In the Supabase dashboard, open **SQL Editor** and run the files in
 `supabase/migrations/` **in order** (open each file, paste its contents, click Run):
 
 1. `20260708000001_foundation.sql`
@@ -40,6 +40,7 @@ In the Supabase dashboard, open **SQL Editor** and run the five files in
 3. `20260708000003_operations.sql`
 4. `20260708000004_knowledge.sql`
 5. `20260708000005_security.sql`
+6. `20260710144044_data_api_grants.sql`
 
 (If you use the Supabase CLI instead: `supabase link --project-ref YOUR_REF` then
 `supabase db push`.)
@@ -83,6 +84,15 @@ To run it at a real URL — not just on your home Wi-Fi — deploy to Vercel fro
 Step-by-step (import the repo, set the two Supabase env vars, point Supabase auth at the live
 URL, Add to Home Screen) is in **[`docs/deployment.md`](docs/deployment.md)**. After the first
 setup, every push to `main` redeploys automatically.
+
+## Testing
+
+- `npm run test` — Vitest unit tests for the pure budget math (`src/lib/budget/`) and the
+  vehicle-knowledge powertrain/subtype detection (`src/lib/knowledge/pack.ts`). No setup needed.
+- `npm run test:e2e` — Playwright end-to-end tests (iPhone 15 viewport) against a **local**
+  Supabase stack, never the project above. Requires Docker; `scripts/e2e-setup.mjs` runs
+  `supabase start` + `supabase db reset` and seeds a test user automatically before the suite runs.
+- Both are required to pass before pushing — see `CLAUDE.md`.
 
 ## Development workflow
 

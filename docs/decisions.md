@@ -246,3 +246,26 @@ tier + gas) and is always user-overridable.
 **Known limitation:** the make/model table is a curated keyword list of common U.S. makes, not an
 exhaustive VIN database; per-model cost tables are out of scope. An unrecognized make falls back to
 body-style defaults and a gas powertrain, correctable with one tap.
+
+---
+
+## ADR-013 — Explicit Data API grants alongside RLS policies
+
+**Context:** Setting up the e2e test suite (local Supabase via the CLI, per ADR-011's sibling
+testing work) surfaced that a fresh local stack — migrations applied, RLS enabled exactly as
+ADR-006 describes — still returned "permission denied" for every table to a signed-in user. RLS
+policies govern which *rows* a role can see; they don't grant access to the *table* at all. Recent
+Supabase CLI versions stopped auto-granting table privileges to `anon`/`authenticated` for new
+tables (the `auto_expose_new_tables` flag in `supabase/config.toml`, itself deprecated and slated
+for removal), whereas the live hosted project still has the legacy implicit grants from when the
+tables were first created there.
+
+**Decision:** Add an explicit, idempotent migration that grants `anon`, `authenticated`, and
+`service_role` full privileges on every table/sequence/routine in `public`, plus matching
+`ALTER DEFAULT PRIVILEGES` so future tables inherit the same grants. This runs safely against any
+environment, including the live project (a re-grant is a no-op there).
+
+**Why:** Table-level GRANTs and RLS policies are two independent gates in Postgres; ADR-006 only
+covered the second. Making the first explicit in a migration — rather than leaning on a
+CLI config flag Supabase has already marked for removal — keeps local dev, CI, and the live
+project's effective permissions identical and durable past that flag's removal date.
